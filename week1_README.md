@@ -1268,7 +1268,7 @@ torch.cuda.is_available()  # returns False
 **Fix:** You installed the CPU version of PyTorch. Reinstall with CUDA:
 ```
 pip uninstall torch torchvision
-pip install torch==2.0.1 torchvision==0.15.2 --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ---
