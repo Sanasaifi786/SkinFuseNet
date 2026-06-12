@@ -354,8 +354,8 @@ You should see `(venv)` appear at the start of your terminal line.
 
 Create `ml\requirements.txt`:
 ```
-torch==2.0.1
-torchvision==0.15.2
+torch==2.1.2
+torchvision==0.16.2
 transformers==4.35.0
 segment-anything
 opencv-python==4.8.0.76
@@ -395,8 +395,8 @@ python-multipart
 pydantic==2.4.2
 pillow
 numpy
-torch==2.0.1
-torchvision==0.15.2
+torch==2.1.2
+torchvision==0.16.2
 transformers==4.35.0
 opencv-python-headless==4.8.0.76
 grad-cam==1.4.8
