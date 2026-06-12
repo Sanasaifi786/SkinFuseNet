@@ -1,0 +1,21 @@
+# Dataset and model files — too large for GitHub
+ml/data/raw/
+ml/data/processed/
+ml/data/masks/
+ml/checkpoints/
+*.pth
+*.pt
+*.h5
+
+# Environment folders
+venv/
+node_modules/
+__pycache__/
+.env
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
