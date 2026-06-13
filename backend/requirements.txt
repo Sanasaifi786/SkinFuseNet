@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pillow
+numpy
+torch
+torchvision
+transformers
+opencv-python-headless
+grad-cam
