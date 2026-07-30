@@ -1,9 +1,3 @@
-/**
- * MetadataForm.jsx
- * Collects patient metadata: age, sex, lesion localization.
- * Passes values up to parent via onChange prop.
- */
-
 // All 13 localization options from HAM10000 dataset
 const LOCALIZATIONS = [
   "back", "lower extremity", "trunk", "upper extremity",

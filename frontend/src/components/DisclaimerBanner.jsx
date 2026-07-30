@@ -1,9 +1,3 @@
-/**
- * DisclaimerBanner.jsx
- * Sticky medical disclaimer — always visible, cannot be dismissed.
- * Required for any medical AI tool.
- */
-
 function DisclaimerBanner() {
   return (
     <div className="w-full bg-yellow-50 border-b border-yellow-300 px-4 py-3">

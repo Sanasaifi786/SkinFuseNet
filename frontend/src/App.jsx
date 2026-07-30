@@ -11,11 +11,9 @@ function App() {
     localization: "",
   })
 
-  // Check if form is complete enough to submit
   const isReady = imageFile && metadata.age && metadata.sex && metadata.localization
 
   function handleSubmit() {
-    // For now — just log values to verify everything is collected
     console.log("Image file:", imageFile.name, imageFile.size)
     console.log("Metadata:", metadata)
     console.log("Ready to send to API ✅")
@@ -24,10 +22,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky disclaimer at top */}
       <DisclaimerBanner />
-
-      {/* Main content */}
       <div className="max-w-xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">SkinFuseNet</h1>
         <p className="text-gray-500 text-sm mb-8">
@@ -35,16 +30,12 @@ function App() {
         </p>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
-          {/* Step 1: Upload */}
           <ImageUpload onFileSelect={setImageFile} />
 
-          {/* Divider */}
           <hr className="border-gray-100" />
 
-          {/* Step 2: Metadata */}
           <MetadataForm values={metadata} onChange={setMetadata} />
 
-          {/* Submit button */}
           <button
             onClick={handleSubmit}
             disabled={!isReady}

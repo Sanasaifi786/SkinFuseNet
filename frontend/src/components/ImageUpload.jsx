@@ -1,9 +1,3 @@
-/**
- * ImageUpload.jsx
- * Handles image file selection, validation, and preview.
- * Passes the selected File object up to parent via onFileSelect prop.
- */
-
 import { useState, useRef } from "react"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024   // 10MB in bytes
@@ -16,28 +10,24 @@ function ImageUpload({ onFileSelect }) {
   const inputRef = useRef(null)
 
   function validateAndSet(file) {
-    // Clear previous state
     setError(null)
     setPreview(null)
     setFilename(null)
 
     if (!file) return
 
-    // Type check
     if (!VALID_TYPES.includes(file.type)) {
       setError("Only JPEG and PNG images are accepted.")
       onFileSelect(null)
       return
     }
 
-    // Size check
     if (file.size > MAX_FILE_SIZE) {
       setError(`File is ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum allowed is 10MB.`)
       onFileSelect(null)
       return
     }
 
-    // Valid — set preview and pass file up to parent
     setPreview(URL.createObjectURL(file))
     setFilename(file.name)
     onFileSelect(file)
@@ -53,7 +43,7 @@ function ImageUpload({ onFileSelect }) {
   }
 
   function handleDragOver(e) {
-    e.preventDefault()    // needed to allow drop
+    e.preventDefault()    
   }
 
   return (
@@ -62,7 +52,6 @@ function ImageUpload({ onFileSelect }) {
         Dermoscopic Image
       </label>
 
-      {/* Drop zone */}
       <div
         onClick={() => inputRef.current.click()}
         onDrop={handleDrop}
@@ -102,7 +91,6 @@ function ImageUpload({ onFileSelect }) {
         )}
       </div>
 
-      {/* Error message */}
       {error && (
         <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
           <span>⚠️</span> {error}
