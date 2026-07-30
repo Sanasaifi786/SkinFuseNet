@@ -1,6 +1,6 @@
 torch
 torchvision
-transformers==4.35.0
+transformers
 segment-anything
 opencv-python==4.8.0.76
 albumentations==1.3.1
