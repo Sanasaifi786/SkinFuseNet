@@ -1,8 +1,5 @@
 # Dataset and model files — too large for GitHub
-ml/data/raw/
-ml/data/processed/
-ml/data/masks/
-ml/checkpoints/
+
 *.pth
 *.pt
 *.h5
