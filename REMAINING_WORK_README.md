@@ -4,8 +4,8 @@
 
 This document provides an up-to-date audit of the entire **SkinFuseNet** codebase, synchronizing tasks across the Master Architecture, `PERSON_A_FULLPLAN.md`, `PERSON_B_FULLPLAN.md`, `PERSON_C_FULLPLAN.md`, and all 13 weekly milestone roadmaps (`week1_README.md` through `week13_README.md`).
 
-**Current Assessment Date:** August 29, 2026  
-**Overall Project Completion:** **~35%** (Scaffold, frontend input/hook flow, backend mock router/schemas, CLAHE pipeline, BERT tokenizer, and SAM checkpoint setup completed; core ML training, model branches, inference integration, and advanced visualization components remaining).
+**Current Assessment Date:** August 29, 2026 (Updated post Person A sprint)  
+**Overall Project Completion:** **~45%** (Person A's Week 3–6 sprint completed: SAM preprocessing, Dataset Loader, EfficientNetV2 CNN branch, and Training Loop are all implemented. CLAHE pipeline, BERT tokenizer, and all frontend/backend scaffolding also done. Remaining: ViT, BERT encoder, Fusion, Focal Loss, Model Assembly, Inference Service, GradCAM, and advanced UI components).
 
 ---
 
@@ -19,7 +19,12 @@ This document provides an up-to-date audit of the entire **SkinFuseNet** codebas
 | **Data & Checkpoints** | `ml/checkpoints/sam_vit_b.pth` | SAM ViT-B model weights downloaded (375 MB). |
 | **Exploratory ML** | `ml/notebooks/` | Notebooks for PyTorch basics, SAM testing, CLAHE exploration, and class imbalance analysis. |
 | **ML Preprocessing** | `ml/src/preprocess/clahe.py` (77 lines) | **Complete (Person B / W3)**: LAB color space CLAHE contrast enhancement script with CLI arguments and batch processing. |
-| **ML Tokenization** | `ml/src/branches/bert.py` (44 lines) | **Partially Complete (Person B / W4)**: `MetadataTokenizer` class implemented using `BertTokenizer.from_pretrained('bert-base-uncased')` with prompt formatting and 128-token padding/truncation. |
+| **ML Tokenization** | BERT Metadata Tokenizer | `ml/src/branches/bert.py` | ✅ **Tokenizer class done** (Person B / W4) |
+| **ML Preprocessing** | SAM Lesion Segmentation Script | `ml/src/preprocess/sam_preprocess.py` | ✅ **Completed** (Person A / W3) — GPU-first, fallback + failure log |
+| **ML Dataset** | PyTorch Dataset + DataLoader Splits | `ml/src/dataset.py` | ✅ **Completed** (Person A / W4) — multimodal, edge-case handling, stratified 70/15/15 split |
+| **ML Testing** | Dataset Verification Script | `ml/tests/verify_dataset.py` | ✅ **Completed** (Person A / W4) |
+| **ML CNN Branch** | EfficientNetV2-S Feature Extractor | `ml/src/branches/cnn.py` | ✅ **Completed** (Person A / W5) — d=512 projection + GradCAM hooks |
+| **ML Training** | Training Loop (GPU, Mixed Precision) | `ml/src/train.py` | ✅ **Completed** (Person A / W6) — AdamW, CosineAnnealing, Mock model ready to swap |
 | **Backend API Scaffold** | `backend/app/main.py` (444 B) | FastAPI application with CORS middleware configured and router mounting. |
 | **Backend Routers** | `backend/app/routers/predict.py` (114 lines) | `/health` and `/predict` endpoints, input validation (10MB image limit, JPEG/PNG MIME checks, age [1-120], sex, and 13 valid HAM10000 anatomical localizations), and mock 7-class response. |
 | **Backend Schemas** | `backend/app/schemas/predict.py` (706 B) | Pydantic response models: `PredictionResponse` and `HealthResponse`. |
@@ -82,19 +87,20 @@ The following files exist in the repository structure but are currently 0-byte p
 
 #### Remaining Tasks:
 1. **Week 3 (Data Preprocessing):**
-   - [ ] Implement `ml/src/preprocess/sam_preprocess.py` using `ml/checkpoints/sam_vit_b.pth`.
-   - [ ] Process HAM10000 images, generate lesion masks, handle segmentation failures with standard image fallback, and log output.
-   - [ ] Coordinate processed directory structure with Person B's `clahe.py`.
+   - [x] ~~Implement `ml/src/preprocess/sam_preprocess.py` using `ml/checkpoints/sam_vit_b.pth`.~~
+   - [ ] **ACTION NEEDED**: Run `sam_preprocess.py` on the full HAM10000 dataset. Coordinate output format with Person B.
 2. **Week 4 (Dataset Loading):**
-   - [ ] Implement `ml/src/dataset.py` with multi-modal inputs (CLAHE-enhanced image tensor + BERT token dictionary + patient metadata vector).
-   - [ ] Handle edge cases: missing ages (median imputation), unknown localization/sex, corrupt images.
-   - [ ] Write `ml/tests/verify_dataset.py` to validate tensor shapes, batch dtypes, and value normalization.
+   - [x] ~~Implement `ml/src/dataset.py` with multi-modal inputs.~~
+   - [x] ~~Handle edge cases: missing ages, unknown localization/sex, corrupt images.~~
+   - [x] ~~Write `ml/tests/verify_dataset.py` to validate tensor shapes, batch dtypes, and value normalization.~~
+   - [ ] **ACTION NEEDED**: Download HAM10000 metadata CSV → place at `ml/data/raw/HAM10000_metadata.csv`.
 3. **Week 5 (CNN Branch):**
-   - [ ] Implement `ml/src/branches/cnn.py` using EfficientNetV2-S.
-   - [ ] Project feature output to shared embedding dimension ($d=512$).
-   - [ ] Define feature map hook extraction for GradCAM.
+   - [x] ~~Implement `ml/src/branches/cnn.py` using EfficientNetV2-S.~~
+   - [x] ~~Project feature output to shared embedding dimension ($d=512$).~~
+   - [x] ~~Define GradCAM hooks on `conv_head`.~~
 4. **Week 6 (Training Loop):**
-   - [ ] Implement `ml/src/train.py` with mixed precision (`torch.cuda.amp`), AdamW optimizer, cosine annealing scheduler, checkpoint saving, and early stopping.
+   - [x] ~~Implement `ml/src/train.py` with mixed precision, AdamW, CosineAnnealing, checkpoint saving.~~
+   - [ ] **ACTION NEEDED**: Once Person C finishes `model.py` and `loss.py`, swap `MockSkinFuseNetModel` → `SkinFuseNetModel` and `CrossEntropyLoss` → `FocalLoss` in `train.py`.
    - [ ] Log step/epoch metrics (Loss, Accuracy, Macro F1).
 5. **Week 7 (Ablation Experiments):**
    - [ ] Orchestrate the 7 ablation training runs (CNN-only, ViT-only, CNN+ViT, Vision+Metadata, Cross-Attention vs Concatenation, etc.).

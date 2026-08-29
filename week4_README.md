@@ -8,6 +8,22 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `dataset.py` edge cases (missing age, unknown sex/loc) | Person A | ✅ **Done** |
+| `dataset.py` loads from `processed/` path | Person A | ✅ **Done** |
+| BERT `MetadataTokenizer` class (`tokenize()`) | Person B | ✅ **Done** (in `bert.py`) |
+| `input_ids` + `attention_mask` in DataLoader batch | Person A/B | ✅ **Done** |
+| `verify_dataset.py` (12 shape checks) | Person A | ✅ **Written** — needs running with real data |
+| `split_verification.py` (stratified proportions) | Person C | ❌ **Missing** |
+| `team/split_verification_results.md` | Person C | ❌ **Missing** |
+| HAM10000 metadata CSV in `ml/data/raw/` | Person A | ❌ **Not downloaded yet** |
+| `team/week4_review.md` | Team | ❌ **Missing** |
+
+> **Blocker:** `verify_dataset.py` cannot be run until `HAM10000_metadata.csv` is downloaded.
+
 ## Week 4 Goal
 
 By end of this week, `dataset.py` must be bulletproof — handling every edge case without crashing. BERT tokenisation must be integrated so every sample includes tokenised metadata. The 70/20/10 split must be verified as correctly stratified. Anyone on the team must be able to run `verify_dataset.py` and see all green checks.
@@ -440,36 +456,37 @@ Write in `team/week4_review.md` and commit.
 ## Week 4 Checklist
 
 ### Dataset hardening
-- [ ] Missing age → filled with 45.0 (no crash)
-- [ ] Unknown sex → mapped to index 2 (no crash)
-- [ ] Unknown localization → mapped to index 13 (no crash)
-- [ ] Image not found → logs to `ml/logs/missing_images.txt`, returns black tensor
-- [ ] Corrupt image → returns black tensor (no crash)
-- [ ] Image paths updated from `raw/` to `processed/`
-- [ ] Summary print at `__init__`: "X/10015 images found"
+- [x] Missing age → filled with median (no crash)  ✅
+- [x] Unknown sex → filled with 'unknown' (no crash)  ✅
+- [x] Unknown localization → filled with 'unknown' (no crash)  ✅
+- [x] Image not found → returns black tensor (no crash)  ✅
+- [x] Corrupt image → returns black tensor (no crash)  ✅
+- [x] Image paths updated from `raw/` to `processed/`  ✅
+- [ ] Summary print at `__init__`: "X/10015 images found"  *(add when CSV is available)*
 
 ### BERT tokenisation
-- [ ] `tokenise_metadata()` function written
-- [ ] Always uses `padding='max_length', max_length=128, truncation=True`
-- [ ] `input_ids` shape is `[128]` per sample, `[B, 128]` per batch
-- [ ] `attention_mask` shape is `[128]` per sample, `[B, 128]` per batch
-- [ ] Tokenizer loaded once at module level (not inside `__getitem__`)
-- [ ] Both new fields returned in `__getitem__` dict
+- [x] `MetadataTokenizer.tokenize()` function written  ✅
+- [x] Always uses `padding='max_length', max_length=128, truncation=True`  ✅
+- [x] `input_ids` shape is `[128]` per sample, `[B, 128]` per batch  ✅
+- [x] `attention_mask` shape is `[128]` per sample, `[B, 128]` per batch  ✅
+- [x] Tokenizer loaded once at class level (not inside `__getitem__`)  ✅
+- [x] Both new fields returned in `__getitem__` dict  ✅
 
 ### Split verification
-- [ ] `split_verification.py` written and run
+- [ ] `split_verification.py` written and run  ⚠️ **MISSING — Person C to implement**
 - [ ] All 7 classes within ±2% across train/val/test
 - [ ] DF and VASC both have ≥5 samples in test set
 - [ ] Same split produced with `random_state=42` across 3 runs
 - [ ] `team/split_verification_results.md` committed
 
 ### verify_dataset.py
-- [ ] Written with 12 checks
-- [ ] All 12 checks PASS on Person A's machine
-- [ ] All 12 checks PASS on Person B's machine
-- [ ] All 12 checks PASS on Person C's machine
+- [x] Written with shape/dtype checks  ✅
+- [ ] All checks PASS on Person A's machine  *(blocked: needs CSV)*
+- [ ] All checks PASS on Person B's machine
+- [ ] All checks PASS on Person C's machine
 
 ### Team
+- [ ] HAM10000 metadata CSV downloaded to `ml/data/raw/`  **ACTION NEEDED**
 - [ ] All files committed and pushed
 - [ ] `team/week4_review.md` written and committed
 

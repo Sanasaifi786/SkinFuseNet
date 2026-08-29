@@ -8,6 +8,22 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `sam_preprocess.py` script | Person A | ✅ **Written** — ready to run on full dataset |
+| `clahe.py` script | Person B | ✅ **Written** — ready to run once SAM output exists |
+| `augmentation.py` (MixUp/CutMix/RSPDA) | Person C | ❌ **Empty** — needs implementing |
+| `dataset.py` updated to load from `processed/` | Person A | ✅ **Done** |
+| Full dataset run (10,015 images) | Person A | ⏳ **Blocked** — needs HAM10000 metadata CSV first |
+| `verify_dataset.py` passing | Team | ⏳ **Blocked** — script written, awaiting data |
+| `team/week3_review.md` | Team | ❌ **Missing** |
+
+> **Next action for Person A:** Download HAM10000 metadata CSV from Kaggle → `ml/data/raw/HAM10000_metadata.csv`, then run `python src/preprocess/sam_preprocess.py`
+
+---
+
 ## Week 3 Goal
 
 By end of this week all 10,015 HAM10000 images must be preprocessed and saved to disk. The augmentation pipeline must be ready. `dataset.py` must be updated to load from processed images. This is the last week before model building starts — the data pipeline must be solid.
@@ -308,31 +324,31 @@ Go through every item. All must be ticked before starting Week 4.
 
 ### Setup
 - [ ] `team/preprocessing_contract.md` written and committed
-- [ ] `ml/data/processed/` folder exists
+- [ ] `ml/data/processed/` folder exists  *(create after running SAM)*
 - [ ] `ml/logs/` folder exists
 
 ### Person A — SAM
-- [ ] `sam_preprocess.py` written and committed
+- [x] `sam_preprocess.py` written and committed  ✅
 - [ ] Tested on 50 images — visual check passed
-- [ ] Run on full 10,015 images — completed
-- [ ] `ls ml/data/processed/ | wc -l` shows ~10015 files
-- [ ] `ml/logs/sam_failures.txt` exists showing fallback count
-- [ ] `dataset.py` updated to load from `ml/data/processed/`
+- [ ] Run on full 10,015 images — completed *(blocked: download HAM10000 CSV first)*
+- [ ] `ml/data/processed/` shows ~10015 files
+- [ ] `sam_failures.log` exists showing fallback count
+- [x] `dataset.py` updated to load from `ml/data/processed/`  ✅
 
 ### Person B — CLAHE
-- [ ] `clahe.py` written and committed
-- [ ] Run on all processed images — completed
-- [ ] Before/after visual comparison notebook saved
+- [x] `clahe.py` written and committed  ✅
+- [ ] Run on all processed images — completed *(blocked: wait for Person A's SAM output)*
+- [ ] Before/after visual comparison done
 - [ ] `dataset.py` can load CLAHE-enhanced images without errors
 
 ### Person C — Augmentation
-- [ ] `augmentation.py` written with MixUp, CutMix, RSPDA
+- [ ] `augmentation.py` written with MixUp, CutMix, RSPDA  ⚠️ **FILE IS EMPTY — NEEDS IMPLEMENTATION**
 - [ ] Visual examples saved to `ml/notebooks/augmentation_examples/`
 - [ ] All 3 methods return correct tensor shapes
 - [ ] `apply_augmentation()` dispatcher function works
 
 ### Team
-- [ ] `verify_dataset.py` runs without errors on processed images
+- [ ] `verify_dataset.py` runs without errors on processed images *(script written, needs data)*
 - [ ] `team/week3_review.md` committed
 
 ---
