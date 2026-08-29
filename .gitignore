@@ -1,5 +1,8 @@
 # Dataset and model files — too large for GitHub
-
+ml/data/raw/HAM10000_images_part_1/
+ml/data/raw/HAM10000_images_part_2/
+ml/data/processed/
+data/
 *.pth
 *.pt
 *.h5
@@ -16,4 +19,3 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
-
