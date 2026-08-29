@@ -8,6 +8,23 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `README.md` updated with real measured results | Person A | ❌ **Not done** — placeholder numbers still in README |
+| GitHub `v1.0.0` tag + release | Person A | ❌ **Not done** |
+| Deployment (Hugging Face Spaces / Render) | Person B | ❌ **Not started** |
+| Live demo URL | Person B | ❌ **Missing** |
+| Demo video (3-5 min, YouTube unlisted) | Person C | ❌ **Not recorded** |
+| Demo video link in README | Person C | ❌ **Missing** |
+| `team/week13_review.md` | Team | ❌ **Missing** |
+
+> **This entire week is blocked until Weeks 7–12 are complete.**  
+> **Current overall project completion: ~45%**
+
+---
+
 ## Week 13 Goal
 
 Public demo URL live. Demo video published and linked. README updated with real results. GitHub repo tagged v1.0.0. Project complete.

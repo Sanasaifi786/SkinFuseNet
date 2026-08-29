@@ -1,12 +1,30 @@
-# SkinFuseNet — Week 12
-### Integration + Docker Compose · 20-item test checklist · Bug fixes · docker-compose.yml
+# SkinFuseNet - Week 12
+### Integration + Docker Compose — 20-item test checklist — Bug fixes — docker-compose.yml
 
 > **Phase:** Integration  
 > **Weeks done:** 1 ✅ · 2 ✅ · 3 ✅ · 4 ✅ · 5 ✅ · 6 ✅ · 7 ✅ · 8 ✅ · 9 ✅ · 10 ✅ · 11 ✅ · **12 ← you are here**  
-> **Time needed:** 10–15 hrs across the week  
-> **Prerequisite:** Week 11 complete — full user journey working with real backend
+> **Time needed:** 10-15 hrs across the week  
+> **Prerequisite:** Week 11 complete - full user journey working with real backend
 
 ---
+
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| 20-point integration test checklist | Person A | ❌ **Not started** |
+| `team/integration_checklist.md` | Person A | ❌ **Missing** |
+| `team/integration_results.md` | Person A | ❌ **Missing** |
+| Bug fixes from integration tests | Person B | ❌ **Not started** |
+| `docker-compose.yml` (backend + frontend) | Person C | ❌ **Missing** |
+| `frontend/Dockerfile` | Person C | ❌ **Missing** |
+| `backend/Dockerfile` | Person A | ❌ **Missing** |
+| `team/week12_review.md` | Team | ❌ **Missing** |
+
+> **This entire week is blocked until Weeks 7–11 (real model inference + frontend components) are complete.**
+
+---
+
 
 ## Week 12 Goal
 

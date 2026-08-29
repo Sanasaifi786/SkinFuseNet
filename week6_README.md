@@ -1,12 +1,25 @@
-# SkinFuseNet — Week 6
-### Model Assembly + Focal Loss · Cross-attention fusion · Full SkinFuseNet model · Training loop skeleton
+# SkinFuseNet - Week 6
+### Model Assembly + Focal Loss — Cross-attention fusion — Full SkinFuseNet model — Training loop
 
-> **Phase:** ML — Model Assembly  
+> **Phase:** ML - Model Assembly  
 > **Weeks done:** 1 ✅ · 2 ✅ · 3 ✅ · 4 ✅ · 5 ✅ · **6 ← you are here**  
-> **Time needed:** 10–15 hrs across the week  
-> **Prerequisite:** Week 5 complete — cnn.py, vit.py, bert.py all producing [B, 512] output
+> **Time needed:** 10-15 hrs across the week  
+> **Prerequisite:** Week 5 complete - cnn.py, vit.py, bert.py all producing [B, 512] output
 
 ---
+
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `ml/src/train.py` (mixed precision, AdamW, CosineAnnealing) | Person A | ✅ **Done** — Mock model stub in place |
+| `ml/src/fusion.py` (cross-attention fusion) | Person B | ❌ **Empty** — not started |
+| `ml/src/loss.py` (focal loss + label smoothing) | Person C | ❌ **Empty** — not started |
+| `ml/src/model.py` (full `SkinFuseNetModel` assembly) | Person C | ❌ **Empty** — not started |
+| Fake-data forward/backward integration test | Team | ❌ **Pending** |
+| `team/week6_review.md` | Team | ❌ **Missing** |
+
+> **Note:** `train.py` uses a `MockSkinFuseNetModel` (CNN-only). Once Person C finishes `model.py` and Person B finishes `fusion.py`, swap the import in `train.py` to use the real `SkinFuseNetModel`.
 
 ## Week 6 Goal
 

@@ -8,6 +8,23 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `usePrediction.js` Axios FormData hook | Person A | ✅ **Done** — POST to `/predict`, loading/error/reset states |
+| `App.jsx` submit wired to hook | Person A | ✅ **Done** — button triggers real API call |
+| Loading state shown in UI | Person A | ✅ **Done** — "Analysing..." button text |
+| Error state shown in UI | Person A | ✅ **Done** — red error banner |
+| `LoadingState.jsx` component (spinner + rotating messages) | Person B | ❌ **Not created** |
+| `ResultsPanel.jsx` loading/error states | Person B | ❌ **Not created** |
+| Full `App.jsx` responsive layout (grid, transitions) | Person C | ⚠️ **Basic only** — no ResultsPanel/Chart/GradCAM wired |
+| `team/week11_review.md` | Team | ❌ **Missing** |
+
+> **Note:** The core API hook and submit flow are done. The visual polish (loading spinners, result components, responsive 2-col layout) needs Person B and C to finish their components first.
+
+---
+
 ## Week 11 Goal
 
 Full user journey working end to end with real model: upload → metadata → analyse → prediction + GradCAM displayed. Loading states polished. All error messages tested.

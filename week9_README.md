@@ -8,6 +8,23 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| Backend `/predict` validation (file type, size, age, sex, loc) | Person A | ✅ **Done** |
+| `ml/src/gradcam.py` (heatmap generation) | Person B | ❌ **Empty** — not started |
+| GradCAM base64 PNG with fallback | Person B | ❌ **Not done** |
+| `backend/app/schemas/predict.py` (basic Pydantic models) | Person C | ✅ **Basic version done** |
+| Schema hardening (field validators, probability sum checks) | Person C | ❌ **Not done** |
+| Schema tests | Person C | ❌ **Missing** |
+| `backend/Dockerfile` | Person A | ❌ **Missing** |
+| `team/week9_review.md` | Team | ❌ **Missing** |
+
+> **This week is blocked until Week 8 (real inference) is working.**
+
+---
+
 ## Week 9 Goal
 
 Every error case returns correct HTTP code and clear English message. GradCAM verified for all 7 classes with fallback. Dockerfile builds and API works inside Docker.

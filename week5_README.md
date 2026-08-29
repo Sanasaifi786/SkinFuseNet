@@ -8,6 +8,21 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `team/API_CONTRACT.md` (agreed embed dim = 512) | Team | ❌ **Missing — create immediately** |
+| `ml/src/branches/cnn.py` (EfficientNetV2-S, d=512) | Person A | ✅ **Done** — GradCAM hooks registered |
+| `ml/src/branches/vit.py` (Swin Transformer V2) | Person B | ❌ **Empty** — not started |
+| `ml/src/branches/bert.py` (BERT encoder module, CLS projection) | Person C | ⚠️ **Tokenizer done**, full encoder module missing |
+| Shape verification `[B, 512]` for all branches | Team | ❌ **Pending** |
+| `team/week5_review.md` | Team | ❌ **Missing** |
+
+> **Person A** — `cnn.py` is complete. Run `python ml/src/branches/cnn.py` to verify shape output.
+
+---
+
 ## Week 5 Goal
 
 All three model branches independently tested and producing correct output shapes. Embedding dimension agreed and locked in team/API_CONTRACT.md before any code is written.
@@ -96,30 +111,30 @@ Do not write a single line of branch code before this is agreed.
 
 ## Week 5 Checklist
 
-### Person A
-- [ ] Load efficientnetv2_s from timm with pretrained=True. This downloads ~80MB of Im...
-- [ ] Print model layers: for name, m in model.named_modules(): print(name). Find the ...
-- [ ] Replace classifier: model.classifier = nn.Linear(model.classifier.in_features, E...
-- [ ] Freeze all layers except last 2 blocks + projection: for name, p in model.named_...
-- [ ] Forward method: takes image [B,3,256,256] returns embedding [B,EMBEDDING_DIM]
+### Setup
+- [ ] `team/API_CONTRACT.md` created with agreed embedding dimension  ⚠️ **MISSING**
+- [ ] EMBEDDING_DIM = 512 agreed by all 3 people
 
-### Person B
-- [ ] Load swin_v2_s from timm with pretrained=True.
-- [ ] Print model.head to see the classification head structure
-- [ ] Replace head: model.head = nn.Linear(model.head.in_features, EMBEDDING_DIM)
-- [ ] Forward method: takes image [B,3,256,256] returns embedding [B,EMBEDDING_DIM]
-- [ ] Test block: same as cnn.py — random batch, check output shape
+### Person A — EfficientNetV2
+- [x] `cnn.py` written and tested  ✅
+- [x] Output shape `[B, 512]` verified  ✅
+- [x] GradCAM hooks registered on `conv_head`  ✅
+- [ ] `pretrained=True` weights confirmed loading
 
-### Person C
-- [ ] Load BertModel.from_pretrained('bert-base-uncased') — this is different from Ber...
-- [ ] Freeze ALL parameters: for param in self.bert.parameters(): param.requires_grad ...
-- [ ] Note: training loop will unfreeze layer by layer after epoch 5 — the branch clas...
-- [ ] Add projection: self.projection = nn.Linear(768, EMBEDDING_DIM). 768 is BERT's h...
-- [ ] Forward: takes input_ids [B,128] and attention_mask [B,128], runs through BERT, ...
+### Person B — Swin Transformer V2
+- [ ] `vit.py` written and tested  ⚠️ **FILE IS EMPTY — Person B must implement**
+- [ ] Output shape `[B, 512]` matches CNN
+- [ ] Pretrained Swin V2 weights load without error
+
+### Person C — BERT Encoder
+- [ ] BERT encoder network module written in `bert.py`  ⚠️ **Full encoder missing (tokenizer only)**
+- [ ] `[CLS]` token extracted and projected to `[B, 512]`
+- [ ] Freezing/unfreezing strategy documented
 
 ### Team
-- [ ] All files committed and pushed to GitHub
-- [ ] team/week5_review.md written and committed
+- [ ] All 3 branches produce identical-shaped outputs `[B, 512]`
+- [ ] All files committed and pushed
+- [ ] `team/week5_review.md` written and committed
 - [ ] Each person can explain their week's work to the other two
 
 ---

@@ -1,12 +1,26 @@
-# SkinFuseNet — Week 10
-### Frontend Components · ResultsPanel · ProbabilityChart · GradCAMViewer · ImageUpload polish
+# SkinFuseNet - Week 10
+### Frontend Components — ResultsPanel — ProbabilityChart — GradCAMViewer — ImageUpload polish
 
 > **Phase:** Frontend  
 > **Weeks done:** 1 ✅ · 2 ✅ · 3 ✅ · 4 ✅ · 5 ✅ · 6 ✅ · 7 ✅ · 8 ✅ · 9 ✅ · **10 ← you are here**  
-> **Time needed:** 10–15 hrs across the week  
-> **Prerequisite:** Week 9 complete — backend fully working with error handling
+> **Time needed:** 10-15 hrs across the week  
+> **Prerequisite:** Week 9 complete - backend fully working with error handling
 
 ---
+
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `ImageUpload.jsx` (drag-drop, validation, preview) | Person A | ✅ **Done** — basic version |
+| `DisclaimerBanner.jsx` | Person A | ✅ **Done** |
+| `ImageUpload.jsx` accessibility + mobile polish | Person A | ⚠️ **Partially done** — needs UX polish |
+| `ResultsPanel.jsx` | Person B | ❌ **Not created** |
+| `ProbabilityChart.jsx` | Person C | ❌ **Not created** |
+| `GradCAMViewer.jsx` | Person C | ❌ **Not created** |
+| `team/week10_review.md` | Team | ❌ **Missing** |
+
+> **Note:** Person A's input components are ready. Person B and C still need to create the result display components.
 
 ## Week 10 Goal
 

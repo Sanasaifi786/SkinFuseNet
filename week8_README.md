@@ -8,6 +8,21 @@
 
 ---
 
+## 🔄 Current Status (Updated August 29, 2026)
+
+| Task | Owner | Status |
+|---|---|---|
+| `/predict` router (mock response) | Person A | ✅ **Done** — validation, schemas, mock response |
+| `backend/app/services/inference.py` (real model) | Person B | ❌ **Empty** — not started |
+| `backend/app/services/preprocess.py` (image to tensor) | Person C | ❌ **Empty** — not started |
+| `backend/app/core/model_loader.py` (singleton loader) | Person C | ❌ **Empty** — not started |
+| `backend/app/services/image_utils.py` | Team | ❌ **Empty** — not started |
+| Router wired to real `run_inference()` | Person A | ❌ **Blocked** — needs inference.py first |
+| Tested with 5 real HAM10000 images | Person A | ❌ **Blocked** |
+| `team/week8_review.md` | Team | ❌ **Missing** |
+
+> **Note:** The mock router and validation are complete. This week's goal is replacing the mock response with real inference.
+
 ## Week 8 Goal
 
 POST /predict returns real model predictions with real GradCAM heatmap. Tested with 5 real HAM10000 test images. Probabilities sum to ~1.0.
