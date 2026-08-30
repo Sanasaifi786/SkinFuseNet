@@ -1,0 +1,43 @@
+SkinFuseNet SAM preprocessing log
+Input:  C:\Users\samee\OneDrive\Documents\GitHub\SkinFuseNet\ml\data\raw
+Output: C:\Users\samee\OneDrive\Documents\GitHub\SkinFuseNet\ml\data\processed
+Device: cuda
+Images to process: 9322
+------------------------------------------------------------
+
+[FALLBACK] ISIC_0024464.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0024645.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0024898.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0025058.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0025145.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0025646.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0026355.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0026369.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0026917.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0027725.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0028049.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0028086.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0028829.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0028861.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0029016.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0029199.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0029971.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0030042.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0030749.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0030815.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0030905.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0031325.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0031382.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0031906.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0032794.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0032801.jpg: SAM found 0 segments
+[FALLBACK] ISIC_0033416.jpg: SAM found 0 segments
+
+SkinFuseNet SAM preprocessing log
+Input:  C:\Users\samee\OneDrive\Documents\GitHub\SkinFuseNet\ml\data\raw
+Output: C:\Users\samee\OneDrive\Documents\GitHub\SkinFuseNet\ml\data\processed
+Device: cuda
+Images to process: 693
+------------------------------------------------------------
+
+[FALLBACK] ISIC_0033957.jpg: SAM found 0 segments
