@@ -1,3 +1,13 @@
+# SkinFuseNet â€” Week 5
+### Model Branches Â· EfficientNetV2 Â· Swin Transformer V2 Â· BERT Encoder
+
+> **Phase:** ML â€” Model Building  
+> **Weeks done:** 1 âœ… Â· 2 âœ… Â· 3 âœ… Â· 4 âœ… Â· **5 â† you are here**  
+> **Time needed:** 10â€“15 hrs across the week  
+> **Prerequisite:** Week 4 complete â€” dataset.py with BERT tokenisation verified
+
+---
+
 # SkinFuseNet — Week 5
 ### Model Branches · EfficientNetV2 · Swin Transformer V2 · BERT Encoder
 
@@ -14,12 +24,13 @@
 |---|---|---|
 | `team/API_CONTRACT.md` (agreed embed dim = 512) | Team | ❌ **Missing — create immediately** |
 | `ml/src/branches/cnn.py` (EfficientNetV2-S, d=512) | Person A | ✅ **Done** — GradCAM hooks registered |
-| `ml/src/branches/vit.py` (Swin Transformer V2) | Person B | ❌ **Empty** — not started |
+| `ml/src/branches/vit.py` (Swin Transformer V2) | Person B | ✅ **Done** — completed |
 | `ml/src/branches/bert.py` (BERT encoder module, CLS projection) | Person C | ⚠️ **Tokenizer done**, full encoder module missing |
 | Shape verification `[B, 512]` for all branches | Team | ❌ **Pending** |
 | `team/week5_review.md` | Team | ❌ **Missing** |
 
 > **Person A** — `cnn.py` is complete. Run `python ml/src/branches/cnn.py` to verify shape output.
+> **Person C** — `bert.py` currently only has the `MetadataTokenizer`. You still need to implement the PyTorch `nn.Module` that imports `BertModel` from HuggingFace, passes the `input_ids` and `attention_mask` through it, extracts the `[CLS]` token representation, and uses a Linear layer to project it to the shared `d=512` embedding dimension.
 
 ---
 
@@ -31,7 +42,7 @@ All three model branches independently tested and producing correct output shape
 
 ## Before Day 1
 
-⚠️ ALL THREE AGREE ON EMBEDDING_DIM BEFORE WRITING CODE
+âš ï¸ ALL THREE AGREE ON EMBEDDING_DIM BEFORE WRITING CODE
 
 This is the single most important coordination point of the whole project. All three branches must output the same size vector or cross-attention fusion cannot work.
 
@@ -47,7 +58,7 @@ Do not write a single line of branch code before this is agreed.
 
 ## Tasks by Person
 
-### Person A — EfficientNetV2 CNN Branch
+### Person A â€” EfficientNetV2 CNN Branch
 **File:** `ml/src/branches/cnn.py`
 
 **Step by step:**
@@ -59,11 +70,11 @@ Do not write a single line of branch code before this is agreed.
 6. Test block under if __name__ == '__main__': create random batch, pass through, print shape, assert shape == (4, 512)
 7. Print trainable vs frozen parameter count
 
-**Why this matters:** EfficientNetV2 excels at local texture, border irregularities, and colour patterns. CNNs have been the dominant approach for dermoscopic classification since 2017. Pretrained ImageNet weights already know edges, textures, and shapes — we fine-tune the last two blocks to learn lesion-specific patterns.
+**Why this matters:** EfficientNetV2 excels at local texture, border irregularities, and colour patterns. CNNs have been the dominant approach for dermoscopic classification since 2017. Pretrained ImageNet weights already know edges, textures, and shapes â€” we fine-tune the last two blocks to learn lesion-specific patterns.
 
 ---
 
-### Person B — Swin Transformer V2 Branch
+### Person B â€” Swin Transformer V2 Branch
 **File:** `ml/src/branches/vit.py`
 
 **Step by step:**
@@ -71,21 +82,21 @@ Do not write a single line of branch code before this is agreed.
 2. Print model.head to see the classification head structure
 3. Replace head: model.head = nn.Linear(model.head.in_features, EMBEDDING_DIM)
 4. Forward method: takes image [B,3,256,256] returns embedding [B,EMBEDDING_DIM]
-5. Test block: same as cnn.py — random batch, check output shape
+5. Test block: same as cnn.py â€” random batch, check output shape
 6. Cross-verify: run BOTH cnn.py and vit.py on the same batch. Print and compare shapes. They must be identical.
-7. Assert: cnn_out.shape == vit_out.shape — if not, one of the EMBEDDING_DIM values is wrong
+7. Assert: cnn_out.shape == vit_out.shape â€” if not, one of the EMBEDDING_DIM values is wrong
 
-**Why this matters:** Swin Transformer V2 uses shifted-window self-attention that builds global context across the full lesion. It can link a suspicious border region to the colour pattern in the lesion centre — a long-range relationship CNNs cannot directly model. This is why adding Swin gives the single largest accuracy jump in the ablation study (+5.9%).
+**Why this matters:** Swin Transformer V2 uses shifted-window self-attention that builds global context across the full lesion. It can link a suspicious border region to the colour pattern in the lesion centre â€” a long-range relationship CNNs cannot directly model. This is why adding Swin gives the single largest accuracy jump in the ablation study (+5.9%).
 
 ---
 
-### Person C — BERT Metadata Encoder Branch
+### Person C â€” BERT Metadata Encoder Branch
 **File:** `ml/src/branches/bert.py`
 
 **Step by step:**
-1. Load BertModel.from_pretrained('bert-base-uncased') — this is different from BertTokenizer. BertModel is the actual neural network.
+1. Load BertModel.from_pretrained('bert-base-uncased') â€” this is different from BertTokenizer. BertModel is the actual neural network.
 2. Freeze ALL parameters: for param in self.bert.parameters(): param.requires_grad = False
-3. Note: training loop will unfreeze layer by layer after epoch 5 — the branch class itself stays frozen at init
+3. Note: training loop will unfreeze layer by layer after epoch 5 â€” the branch class itself stays frozen at init
 4. Add projection: self.projection = nn.Linear(768, EMBEDDING_DIM). 768 is BERT's hidden size.
 5. Forward: takes input_ids [B,128] and attention_mask [B,128], runs through BERT, takes CLS token at position 0 (outputs.last_hidden_state[:,0,:]), projects to EMBEDDING_DIM
 6. Test with real tokenised data from dataset: load a batch, pass input_ids and attention_mask through bert.py
@@ -101,8 +112,8 @@ Do not write a single line of branch code before this is agreed.
 |-----|-------|-----|
 | Mon | Agree EMBEDDING_DIM in team/API_CONTRACT.md. Print and explore branch architectures. | All 3 together |
 | Tue | Write branch classes with pseudocode comments first, then fill in real code. | Each person independently |
-| Wed | Write and run test blocks — verify output shapes. | Each person independently |
-| Thu | Cross-verify: Person A and B run both cnn.py and vit.py on same batch. | A + B together · C tests with tokenised data |
+| Wed | Write and run test blocks â€” verify output shapes. | Each person independently |
+| Thu | Cross-verify: Person A and B run both cnn.py and vit.py on same batch. | A + B together Â· C tests with tokenised data |
 | Fri | Fix any shape mismatches. Document freezing strategy in comments. | Each person independently |
 | Sat | Commit all branches. Run all 3 test blocks together on one machine. | All 3 together |
 | Sun | Weekly review. Answer: does everyone understand what each branch does? | All 3 together |
@@ -112,22 +123,22 @@ Do not write a single line of branch code before this is agreed.
 ## Week 5 Checklist
 
 ### Setup
-- [ ] `team/API_CONTRACT.md` created with agreed embedding dimension  ⚠️ **MISSING**
+- [ ] `team/API_CONTRACT.md` created with agreed embedding dimension  âš ï¸ **MISSING**
 - [ ] EMBEDDING_DIM = 512 agreed by all 3 people
 
-### Person A — EfficientNetV2
-- [x] `cnn.py` written and tested  ✅
-- [x] Output shape `[B, 512]` verified  ✅
-- [x] GradCAM hooks registered on `conv_head`  ✅
+### Person A â€” EfficientNetV2
+- [x] `cnn.py` written and tested  âœ…
+- [x] Output shape `[B, 512]` verified  âœ…
+- [x] GradCAM hooks registered on `conv_head`  âœ…
 - [ ] `pretrained=True` weights confirmed loading
 
-### Person B — Swin Transformer V2
-- [ ] `vit.py` written and tested  ⚠️ **FILE IS EMPTY — Person B must implement**
+### Person B â€” Swin Transformer V2
+- [ ] `vit.py` written and tested  âš ï¸ **FILE IS EMPTY â€” Person B must implement**
 - [ ] Output shape `[B, 512]` matches CNN
 - [ ] Pretrained Swin V2 weights load without error
 
-### Person C — BERT Encoder
-- [ ] BERT encoder network module written in `bert.py`  ⚠️ **Full encoder missing (tokenizer only)**
+### Person C â€” BERT Encoder
+- [ ] BERT encoder network module written in `bert.py`  âš ï¸ **Full encoder missing (tokenizer only)**
 - [ ] `[CLS]` token extracted and projected to `[B, 512]`
 - [ ] Freezing/unfreezing strategy documented
 
@@ -157,8 +168,8 @@ Do not write a single line of branch code before this is agreed.
 
 ## Deliverable
 
-cnn.py, vit.py, bert.py — each producing [B, 512] output. team/API_CONTRACT.md updated. Cross-verification between cnn.py and vit.py passing.
+cnn.py, vit.py, bert.py â€” each producing [B, 512] output. team/API_CONTRACT.md updated. Cross-verification between cnn.py and vit.py passing.
 
 ---
 
-*SkinFuseNet · Week 5 · All 3 team members*
+*SkinFuseNet Â· Week 5 Â· All 3 team members*

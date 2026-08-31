@@ -40,15 +40,10 @@ This document provides an up-to-date audit of the entire **SkinFuseNet** codebas
 
 The following files exist in the repository structure but are currently 0-byte placeholders or not yet written:
 
-- `ml/src/preprocess/sam_preprocess.py` (0 bytes)
 - `ml/src/preprocess/augmentation.py` (0 bytes)
-- `ml/src/dataset.py` (0 bytes)
-- `ml/src/branches/cnn.py` (0 bytes)
-- `ml/src/branches/vit.py` (0 bytes)
 - `ml/src/fusion.py` (0 bytes)
 - `ml/src/loss.py` (0 bytes)
 - `ml/src/model.py` (0 bytes)
-- `ml/src/train.py` (0 bytes)
 - `ml/src/evaluate.py` (0 bytes)
 - `ml/src/export.py` (0 bytes)
 - `ml/src/gradcam.py` (0 bytes)
@@ -128,8 +123,8 @@ The following files exist in the repository structure but are currently 0-byte p
    - [x] Implement `ml/src/branches/bert.py` `MetadataTokenizer` class (**Done**).
    - [ ] Test tokenization batching and attention masks with `dataset.py`.
 3. **Week 5 (Vision Transformer Branch):**
-   - [ ] Implement `ml/src/branches/vit.py` using Swin Transformer V2 (`swin_v2_b` or `swin_v2_t`).
-   - [ ] Project token embedding output to shared dimension ($d=512$).
+   - [x] Implement `ml/src/branches/vit.py` using Swin Transformer V2 (`swin_v2_b` or `swin_v2_t`). (**Done**)
+   - [x] Project token embedding output to shared dimension ($d=512$). (**Done**)
 4. **Week 6 (Cross-Attention Fusion):**
    - [ ] Implement `ml/src/fusion.py` Cross-Attention module (Visual tokens query Metadata, or bidirectional cross-attention).
    - [ ] Add projection head and layer normalization before final classification layer.

@@ -1,53 +1,53 @@
-# SkinFuseNet — Week 4
-### Dataset Finalisation · BERT Tokenisation · Stratified Split Verification
+﻿# SkinFuseNet â€” Week 4
+### Dataset Finalisation Â· BERT Tokenisation Â· Stratified Split Verification
 
-> **Phase:** ML — Data Pipeline  
-> **Weeks done:** 1 ✅ · 2 ✅ · 3 ✅ · **4 ← you are here**  
-> **Time needed:** 10–15 hrs across the week  
-> **Prerequisite:** Week 3 complete — all 10,015 images in `ml/data/processed/`, `augmentation.py` committed
+> **Phase:** ML â€” Data Pipeline  
+> **Weeks done:** 1 âœ… Â· 2 âœ… Â· 3 âœ… Â· **4 â† you are here**  
+> **Time needed:** 10â€“15 hrs across the week  
+> **Prerequisite:** Week 3 complete â€” all 10,015 images in `ml/data/processed/`, `augmentation.py` committed
 
 ---
 
-## 🔄 Current Status (Updated August 29, 2026)
+## ðŸ”„ Current Status (Updated August 29, 2026)
 
 | Task | Owner | Status |
 |---|---|---|
-| `dataset.py` edge cases (missing age, unknown sex/loc) | Person A | ✅ **Done** |
-| `dataset.py` loads from `processed/` path | Person A | ✅ **Done** |
-| BERT `MetadataTokenizer` class (`tokenize()`) | Person B | ✅ **Done** (in `bert.py`) |
-| `input_ids` + `attention_mask` in DataLoader batch | Person A/B | ✅ **Done** |
-| `verify_dataset.py` (12 shape checks) | Person A | ✅ **Written** — needs running with real data |
-| `split_verification.py` (stratified proportions) | Person C | ❌ **Missing** |
-| `team/split_verification_results.md` | Person C | ❌ **Missing** |
-| HAM10000 metadata CSV in `ml/data/raw/` | Person A | ❌ **Not downloaded yet** |
-| `team/week4_review.md` | Team | ❌ **Missing** |
+| `dataset.py` edge cases (missing age, unknown sex/loc) | Person A | âœ… **Done** |
+| `dataset.py` loads from `processed/` path | Person A | âœ… **Done** |
+| BERT `MetadataTokenizer` class (`tokenize()`) | Person B | âœ… **Done** (in `bert.py`) |
+| `input_ids` + `attention_mask` in DataLoader batch | Person A/B | âœ… **Done** |
+| `verify_dataset.py` (12 shape checks) | Person A | âœ… **Written** â€” needs running with real data |
+| `split_verification.py` (stratified proportions) | Person C | âŒ **Missing** |
+| `team/split_verification_results.md` | Person C | âŒ **Missing** |
+| HAM10000 metadata CSV in `ml/data/raw/` | Person A | âŒ **Not downloaded yet** |
+| `team/week4_review.md` | Team | âŒ **Missing** |
 
 > **Blocker:** `verify_dataset.py` cannot be run until `HAM10000_metadata.csv` is downloaded.
 
 ## Week 4 Goal
 
-By end of this week, `dataset.py` must be bulletproof — handling every edge case without crashing. BERT tokenisation must be integrated so every sample includes tokenised metadata. The 70/20/10 split must be verified as correctly stratified. Anyone on the team must be able to run `verify_dataset.py` and see all green checks.
+By end of this week, `dataset.py` must be bulletproof â€” handling every edge case without crashing. BERT tokenisation must be integrated so every sample includes tokenised metadata. The 70/20/10 split must be verified as correctly stratified. Anyone on the team must be able to run `verify_dataset.py` and see all green checks.
 
 ---
 
-## Day 1 — Monday · Audit + Plan
+## Day 1 â€” Monday Â· Audit + Plan
 
-**All 3 people · ~1.5 hrs**
+**All 3 people Â· ~1.5 hrs**
 
-### Person A — Audit dataset.py
+### Person A â€” Audit dataset.py
 Open `ml/src/dataset.py` from week 2. Go through every line. Write down every place something could go wrong:
 
 ```
 Potential failure points to fix:
-1. df['age'] has NaN values for some rows — crashes float conversion
-2. df['sex'] has 'unknown' for some rows — not in SEX_MAP
-3. df['localization'] has 'unknown' for some rows — not in LOC_MAP
-4. Image file not found in processed folder — raises FileNotFoundError
-5. Corrupt image file — PIL raises OSError when opening
-6. Paths still pointing to raw/ folder — must update to processed/
+1. df['age'] has NaN values for some rows â€” crashes float conversion
+2. df['sex'] has 'unknown' for some rows â€” not in SEX_MAP
+3. df['localization'] has 'unknown' for some rows â€” not in LOC_MAP
+4. Image file not found in processed folder â€” raises FileNotFoundError
+5. Corrupt image file â€” PIL raises OSError when opening
+6. Paths still pointing to raw/ folder â€” must update to processed/
 ```
 
-### Person B — Study BERT tokenisation
+### Person B â€” Study BERT tokenisation
 Open a Jupyter notebook. Run this and study the output:
 ```python
 from transformers import BertTokenizer
@@ -70,7 +70,7 @@ for text in samples:
 ```
 Understand: `attention_mask` has 1s for real tokens and 0s for padding.
 
-### Person C — Plan split verification
+### Person C â€” Plan split verification
 Open HAM10000 metadata CSV in a notebook. Run:
 ```python
 import pandas as pd
@@ -78,17 +78,17 @@ df = pd.read_csv('ml/data/raw/HAM10000_metadata.csv')
 print(df['dx'].value_counts())
 print(df['dx'].value_counts() / len(df) * 100)
 ```
-Write down the expected percentage for each class. These are the target percentages that each split should match within ±2%.
+Write down the expected percentage for each class. These are the target percentages that each split should match within Â±2%.
 
 ---
 
-## Day 2 — Tuesday · Fix dataset.py Edge Cases
+## Day 2 â€” Tuesday Â· Fix dataset.py Edge Cases
 
-**Person A leads · B and C watch and understand · ~3 hrs**
+**Person A leads Â· B and C watch and understand Â· ~3 hrs**
 
-### Person A — Harden dataset.py
+### Person A â€” Harden dataset.py
 
-**Fix 1 — Missing age:**
+**Fix 1 â€” Missing age:**
 ```python
 # In __getitem__:
 age_raw = row['age']
@@ -98,7 +98,7 @@ if pd.isna(age_raw):
 age = torch.tensor(float(age_raw) / 85.0, dtype=torch.float32)
 ```
 
-**Fix 2 — Unknown sex:**
+**Fix 2 â€” Unknown sex:**
 ```python
 SEX_MAP = {'male': 0, 'female': 1, 'unknown': 2}
 sex_str = str(row['sex']).lower().strip()
@@ -106,7 +106,7 @@ sex_idx = SEX_MAP.get(sex_str, 2)   # default to 2 = unknown
 sex = torch.tensor(sex_idx, dtype=torch.long)
 ```
 
-**Fix 3 — Unknown localization:**
+**Fix 3 â€” Unknown localization:**
 ```python
 LOC_MAP = {
     'back': 0, 'lower extremity': 1, 'trunk': 2,
@@ -118,7 +118,7 @@ loc_str = str(row['localization']).lower().strip()
 loc_idx = LOC_MAP.get(loc_str, 13)  # default to 13 = unknown
 ```
 
-**Fix 4 — Image not found:**
+**Fix 4 â€” Image not found:**
 ```python
 def _find_image(self, image_id):
     path = os.path.join(self.processed_dir, f"{image_id}.jpg")
@@ -137,7 +137,7 @@ def __getitem__(self, idx):
         # Return black tensor if image not found
         image = torch.zeros(3, 256, 256)
     else:
-        # Fix 5 — Corrupt image:
+        # Fix 5 â€” Corrupt image:
         try:
             image = Image.open(img_path).convert('RGB')
             if self.transform:
@@ -146,7 +146,7 @@ def __getitem__(self, idx):
             image = torch.zeros(3, 256, 256)
 ```
 
-**Fix 5 — Update image path:**
+**Fix 5 â€” Update image path:**
 Change the processed directory from raw folders to:
 ```python
 self.processed_dir = "ml/data/processed"
@@ -167,34 +167,34 @@ def __init__(self, dataframe, transform=None):
 
 ---
 
-## Day 3 — Wednesday · BERT Tokenisation Integration
+## Day 3 â€” Wednesday Â· BERT Tokenisation Integration
 
-**Person B leads · A and C follow · ~3 hrs**
+**Person B leads Â· A and C follow Â· ~3 hrs**
 
-### Person B — Integrate tokenisation into dataset.py
+### Person B â€” Integrate tokenisation into dataset.py
 
-**Step 1 — Load tokenizer once at module level:**
+**Step 1 â€” Load tokenizer once at module level:**
 At the top of `dataset.py`, after imports:
 ```python
 from transformers import BertTokenizer
 BERT_TOKENIZER = BertTokenizer.from_pretrained('bert-base-uncased')
 ```
-Loading the tokenizer once at module level is important — loading it inside `__getitem__` would reload it 10,000+ times during training, which is very slow.
+Loading the tokenizer once at module level is important â€” loading it inside `__getitem__` would reload it 10,000+ times during training, which is very slow.
 
-**Step 2 — Add tokenise_metadata function:**
+**Step 2 â€” Add tokenise_metadata function:**
 ```python
 def tokenise_metadata(age_raw, sex_str, loc_str):
     """
     Convert patient metadata to BERT token tensors.
     
     Always uses:
-    - padding='max_length'  → ensures all sequences are same length
-    - max_length=128        → fixed length for DataLoader batching
-    - truncation=True       → handles edge cases (very long strings)
+    - padding='max_length'  â†’ ensures all sequences are same length
+    - max_length=128        â†’ fixed length for DataLoader batching
+    - truncation=True       â†’ handles edge cases (very long strings)
     
     Returns:
-    - input_ids:      [128] — integer token IDs
-    - attention_mask: [128] — 1 for real tokens, 0 for padding
+    - input_ids:      [128] â€” integer token IDs
+    - attention_mask: [128] â€” 1 for real tokens, 0 for padding
     """
     age_val = int(float(age_raw)) if not pd.isna(age_raw) else 45
     prompt = f"Patient: {age_val}-year-old {sex_str}. Lesion location: {loc_str}."
@@ -212,7 +212,7 @@ def tokenise_metadata(age_raw, sex_str, loc_str):
     }
 ```
 
-**Step 3 — Call it in __getitem__ and add to return dict:**
+**Step 3 â€” Call it in __getitem__ and add to return dict:**
 ```python
 def __getitem__(self, idx):
     row = self.df.iloc[idx]
@@ -233,7 +233,7 @@ def __getitem__(self, idx):
     }
 ```
 
-**Step 4 — Verify batch shapes after integration:**
+**Step 4 â€” Verify batch shapes after integration:**
 ```python
 from ml.src.dataset import get_dataloaders
 train_loader, _, _ = get_dataloaders(csv_path, batch_size=4)
@@ -241,18 +241,18 @@ batch = next(iter(train_loader))
 
 print("image shape:         ", batch['image'].shape)          # [4, 3, 256, 256]
 print("label shape:         ", batch['label'].shape)          # [4]
-print("input_ids shape:     ", batch['input_ids'].shape)      # [4, 128]  ← NEW
-print("attention_mask shape:", batch['attention_mask'].shape) # [4, 128]  ← NEW
+print("input_ids shape:     ", batch['input_ids'].shape)      # [4, 128]  â† NEW
+print("attention_mask shape:", batch['attention_mask'].shape) # [4, 128]  â† NEW
 
 # Verify dtypes
 assert batch['image'].dtype == torch.float32
 assert batch['label'].dtype == torch.int64
 assert batch['input_ids'].dtype == torch.int64
 assert batch['attention_mask'].dtype == torch.int64
-print("✅ All shapes and dtypes correct")
+print("âœ… All shapes and dtypes correct")
 ```
 
-**Why padding must always be max_length — explain to your team:**
+**Why padding must always be max_length â€” explain to your team:**
 Without padding, sequence lengths vary per sample (a short metadata string = fewer tokens). DataLoader tries to stack all samples in a batch into one tensor. If sequences have different lengths, this fails with:
 ```
 RuntimeError: stack expects each tensor to be equal size
@@ -261,15 +261,15 @@ RuntimeError: stack expects each tensor to be equal size
 
 ---
 
-## Day 4 — Thursday · Split Verification
+## Day 4 â€” Thursday Â· Split Verification
 
-**Person C leads · A and B follow · ~2 hrs**
+**Person C leads Â· A and B follow Â· ~2 hrs**
 
-### Person C — Write split_verification.py
+### Person C â€” Write split_verification.py
 
 Create `ml/src/split_verification.py`:
 
-**Step 1 — Reproduce the split:**
+**Step 1 â€” Reproduce the split:**
 ```python
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -285,7 +285,7 @@ df_train, df_val      = train_test_split(df_trainval, test_size=0.222,
                                           stratify=df_trainval['dx'], random_state=42)
 ```
 
-**Step 2 — Check total counts:**
+**Step 2 â€” Check total counts:**
 ```python
 total = len(df)
 print(f"Full dataset: {total}")
@@ -295,7 +295,7 @@ print(f"Test:         {len(df_test)} ({len(df_test)/total*100:.1f}%)")
 # Expected: ~7011 / ~2003 / ~1001
 ```
 
-**Step 3 — Check class distribution in each split:**
+**Step 3 â€” Check class distribution in each split:**
 ```python
 CLASS_ORDER = ['nv','mel','bkl','bcc','akiec','vasc','df']
 print("\nClass distribution comparison:")
@@ -313,24 +313,24 @@ for cls in CLASS_ORDER:
     
     # Check all splits within 2% of full dataset
     ok = all(abs(p - full_pct) < 2.0 for p in [train_pct, val_pct, test_pct])
-    status = "✅ OK" if ok else "❌ FAIL"
+    status = "âœ… OK" if ok else "âŒ FAIL"
     if not ok:
         all_pass = False
     
     print(f"{cls.upper():8} {full_pct:7.1f}% {train_pct:7.1f}% {val_pct:7.1f}% {test_pct:7.1f}% {status}")
 ```
 
-**Step 4 — Check minority class counts in test:**
+**Step 4 â€” Check minority class counts in test:**
 ```python
 print("\nMinority class counts in test set:")
 MIN_REQUIRED = 5
 for cls in ['vasc', 'df']:
     count = (df_test['dx'] == cls).sum()
-    status = f"✅ ({count} samples)" if count >= MIN_REQUIRED else f"❌ ONLY {count} samples!"
+    status = f"âœ… ({count} samples)" if count >= MIN_REQUIRED else f"âŒ ONLY {count} samples!"
     print(f"  {cls.upper()}: {status}")
 ```
 
-**Step 5 — Check reproducibility:**
+**Step 5 â€” Check reproducibility:**
 ```python
 print("\nReproducibility check (run split 3 times with same seed):")
 results = []
@@ -339,59 +339,59 @@ for run in range(3):
     results.append(set(te['image_id'].tolist()))
 
 if results[0] == results[1] == results[2]:
-    print("✅ Same split produced 3 times — reproducible")
+    print("âœ… Same split produced 3 times â€” reproducible")
 else:
-    print("❌ FAIL — different splits produced. Check random_state usage.")
+    print("âŒ FAIL â€” different splits produced. Check random_state usage.")
 ```
 
-**Step 6 — Write results to file:**
+**Step 6 â€” Write results to file:**
 ```python
 with open('team/split_verification_results.md', 'w') as f:
     f.write("# Split Verification Results\n\n")
     f.write(f"Total dataset: {total} images\n")
     f.write(f"Train: {len(df_train)} | Val: {len(df_val)} | Test: {len(df_test)}\n\n")
-    f.write("All class proportions within ±2% across splits: ")
-    f.write("✅ PASS\n" if all_pass else "❌ FAIL\n")
-    f.write("Reproducibility with random_state=42: ✅ PASS\n")
+    f.write("All class proportions within Â±2% across splits: ")
+    f.write("âœ… PASS\n" if all_pass else "âŒ FAIL\n")
+    f.write("Reproducibility with random_state=42: âœ… PASS\n")
 
 print("\nResults written to team/split_verification_results.md")
 ```
 
 ---
 
-## Day 5 — Friday · Write verify_dataset.py
+## Day 5 â€” Friday Â· Write verify_dataset.py
 
-**Person A writes · B and C run it on their machines · ~2 hrs**
+**Person A writes Â· B and C run it on their machines Â· ~2 hrs**
 
-### Person A — Write verify_dataset.py
+### Person A â€” Write verify_dataset.py
 
-Create `ml/verify_dataset.py` — a standalone verification script:
+Create `ml/verify_dataset.py` â€” a standalone verification script:
 
 ```
 verify_dataset.py checks:
 
 For train, val, and test DataLoaders:
-1. Batch image shape is [batch_size, 3, 256, 256]       ← PASS/FAIL
-2. Batch label shape is [batch_size]                     ← PASS/FAIL
-3. Batch input_ids shape is [batch_size, 128]            ← PASS/FAIL
-4. Batch attention_mask shape is [batch_size, 128]       ← PASS/FAIL
-5. Image dtype is float32                                ← PASS/FAIL
-6. Label dtype is int64                                  ← PASS/FAIL
-7. Image min value > -3.5 (after normalisation)         ← PASS/FAIL
-8. Image max value < 3.5  (after normalisation)         ← PASS/FAIL
-9. Label values all between 0 and 6                     ← PASS/FAIL
-10. Age values all between 0.0 and 1.0                  ← PASS/FAIL
-11. input_ids values all between 0 and 30522 (vocab)    ← PASS/FAIL
-12. attention_mask values only 0 or 1                   ← PASS/FAIL
+1. Batch image shape is [batch_size, 3, 256, 256]       â† PASS/FAIL
+2. Batch label shape is [batch_size]                     â† PASS/FAIL
+3. Batch input_ids shape is [batch_size, 128]            â† PASS/FAIL
+4. Batch attention_mask shape is [batch_size, 128]       â† PASS/FAIL
+5. Image dtype is float32                                â† PASS/FAIL
+6. Label dtype is int64                                  â† PASS/FAIL
+7. Image min value > -3.5 (after normalisation)         â† PASS/FAIL
+8. Image max value < 3.5  (after normalisation)         â† PASS/FAIL
+9. Label values all between 0 and 6                     â† PASS/FAIL
+10. Age values all between 0.0 and 1.0                  â† PASS/FAIL
+11. input_ids values all between 0 and 30522 (vocab)    â† PASS/FAIL
+12. attention_mask values only 0 or 1                   â† PASS/FAIL
 ```
 
 The script must:
 - Print each check as it runs
-- Print `✅ PASS` or `❌ FAIL: [description]` for each
+- Print `âœ… PASS` or `âŒ FAIL: [description]` for each
 - Print a final summary: `All X checks passed` or `X checks failed`
 - Exit with code 1 if any check fails (useful for automation)
 
-### Person B — Run verify_dataset.py
+### Person B â€” Run verify_dataset.py
 ```bash
 cd ml
 venv\Scripts\activate
@@ -399,36 +399,36 @@ python verify_dataset.py
 ```
 Share the output in the team group chat.
 
-### Person C — Run verify_dataset.py
-Same — run it independently. If Person A and B get identical results but Person C gets different results, there is an environment bug that needs fixing together.
+### Person C â€” Run verify_dataset.py
+Same â€” run it independently. If Person A and B get identical results but Person C gets different results, there is an environment bug that needs fixing together.
 
 ---
 
-## Day 6 — Saturday · Polish + Commit Everything
+## Day 6 â€” Saturday Â· Polish + Commit Everything
 
-**Each person · ~1.5 hrs**
+**Each person Â· ~1.5 hrs**
 
-### Person A — Final dataset.py
+### Person A â€” Final dataset.py
 - Add a docstring at the top explaining the class, inputs, outputs, and each returned tensor
 - Add `__repr__` method: `def __repr__(self): return f"HAM10000Dataset({len(self)} samples)"`
-- Run `verify_dataset.py` one final time — all checks green
+- Run `verify_dataset.py` one final time â€” all checks green
 
-### Person B — Test tokenisation edge cases
+### Person B â€” Test tokenisation edge cases
 Test these specific metadata combinations:
-- Patient with missing age (NaN in CSV) — should not crash
-- Patient with sex = 'unknown' — should tokenise as "unknown"
-- Patient with localization = 'unknown' — should tokenise as "unknown"
-- Very old patient: age = 95 — normalised value = 95/85 = 1.12 (slightly above 1.0 — is this handled?)
+- Patient with missing age (NaN in CSV) â€” should not crash
+- Patient with sex = 'unknown' â€” should tokenise as "unknown"
+- Patient with localization = 'unknown' â€” should tokenise as "unknown"
+- Very old patient: age = 95 â€” normalised value = 95/85 = 1.12 (slightly above 1.0 â€” is this handled?)
 
-### Person C — Commit split verification
+### Person C â€” Commit split verification
 ```bash
 git add ml/src/split_verification.py
 git add team/split_verification_results.md
-git commit -m "docs: stratified split verification — all classes within 2% across splits"
+git commit -m "docs: stratified split verification â€” all classes within 2% across splits"
 git push
 ```
 
-### All 3 — Final commit
+### All 3 â€” Final commit
 ```bash
 git add ml/src/dataset.py
 git add ml/verify_dataset.py
@@ -438,9 +438,9 @@ git push
 
 ---
 
-## Day 7 — Sunday · Weekly Review
+## Day 7 â€” Sunday Â· Weekly Review
 
-**All 3 together · 30 mins**
+**All 3 together Â· 30 mins**
 
 Each person answers:
 1. What did I finish this week?
@@ -449,38 +449,38 @@ Each person answers:
 
 Write in `team/week4_review.md` and commit.
 
-**Critical question to answer this week:** Does everyone understand what `input_ids` and `attention_mask` are and why padding is necessary? If not, Person B explains it again. Week 5 builds the BERT model branch — you need to understand the inputs before you build the model that receives them.
+**Critical question to answer this week:** Does everyone understand what `input_ids` and `attention_mask` are and why padding is necessary? If not, Person B explains it again. Week 5 builds the BERT model branch â€” you need to understand the inputs before you build the model that receives them.
 
 ---
 
 ## Week 4 Checklist
 
 ### Dataset hardening
-- [x] Missing age → filled with median (no crash)  ✅
-- [x] Unknown sex → filled with 'unknown' (no crash)  ✅
-- [x] Unknown localization → filled with 'unknown' (no crash)  ✅
-- [x] Image not found → returns black tensor (no crash)  ✅
-- [x] Corrupt image → returns black tensor (no crash)  ✅
-- [x] Image paths updated from `raw/` to `processed/`  ✅
+- [x] Missing age â†’ filled with median (no crash)  âœ…
+- [x] Unknown sex â†’ filled with 'unknown' (no crash)  âœ…
+- [x] Unknown localization â†’ filled with 'unknown' (no crash)  âœ…
+- [x] Image not found â†’ returns black tensor (no crash)  âœ…
+- [x] Corrupt image â†’ returns black tensor (no crash)  âœ…
+- [x] Image paths updated from `raw/` to `processed/`  âœ…
 - [ ] Summary print at `__init__`: "X/10015 images found"  *(add when CSV is available)*
 
 ### BERT tokenisation
-- [x] `MetadataTokenizer.tokenize()` function written  ✅
-- [x] Always uses `padding='max_length', max_length=128, truncation=True`  ✅
-- [x] `input_ids` shape is `[128]` per sample, `[B, 128]` per batch  ✅
-- [x] `attention_mask` shape is `[128]` per sample, `[B, 128]` per batch  ✅
-- [x] Tokenizer loaded once at class level (not inside `__getitem__`)  ✅
-- [x] Both new fields returned in `__getitem__` dict  ✅
+- [x] `MetadataTokenizer.tokenize()` function written  âœ…
+- [x] Always uses `padding='max_length', max_length=128, truncation=True`  âœ…
+- [x] `input_ids` shape is `[128]` per sample, `[B, 128]` per batch  âœ…
+- [x] `attention_mask` shape is `[128]` per sample, `[B, 128]` per batch  âœ…
+- [x] Tokenizer loaded once at class level (not inside `__getitem__`)  âœ…
+- [x] Both new fields returned in `__getitem__` dict  âœ…
 
 ### Split verification
-- [ ] `split_verification.py` written and run  ⚠️ **MISSING — Person C to implement**
-- [ ] All 7 classes within ±2% across train/val/test
-- [ ] DF and VASC both have ≥5 samples in test set
+- [ ] `split_verification.py` written and run  âš ï¸ **MISSING â€” Person C to implement**
+- [ ] All 7 classes within Â±2% across train/val/test
+- [ ] DF and VASC both have â‰¥5 samples in test set
 - [ ] Same split produced with `random_state=42` across 3 runs
 - [ ] `team/split_verification_results.md` committed
 
 ### verify_dataset.py
-- [x] Written with shape/dtype checks  ✅
+- [x] Written with shape/dtype checks  âœ…
 - [ ] All checks PASS on Person A's machine  *(blocked: needs CSV)*
 - [ ] All checks PASS on Person B's machine
 - [ ] All checks PASS on Person C's machine
@@ -498,7 +498,7 @@ Write in `team/week4_review.md` and commit.
 **Cause:** BERT padding is not set to `max_length`  
 **Fix:** Make sure you have `padding='max_length', max_length=128` in the tokenizer call. This is the single most common error this week.
 
-### "NaN in batch — cannot convert to tensor"
+### "NaN in batch â€” cannot convert to tensor"
 **Cause:** `pd.isna(row['age'])` returns True but not handled before `float()` conversion  
 **Fix:** Always check `if pd.isna(age_raw): age_raw = 45.0` before any arithmetic on age
 
@@ -528,4 +528,4 @@ The branches built in week 5 take as input:
 
 ---
 
-*SkinFuseNet · Week 4 · All 3 team members*
+*SkinFuseNet Â· Week 4 Â· All 3 team members*
