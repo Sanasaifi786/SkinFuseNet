@@ -47,7 +47,7 @@ Skin cancer is the most prevalent cancer globally. Early detection dramatically 
 - A React web application for clinical decision support
 - The accompanying IEEE research paper (LaTeX source)
 
-**Key results on HAM10000 (7-class):**
+**Expected results on HAM10000 (7-class):**
 
 | Metric | Score |
 |--------|-------|
