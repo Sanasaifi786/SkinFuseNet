@@ -215,56 +215,56 @@ flowchart TD
     classDef data fill:#f1f8e9,stroke:#689f38,stroke-dasharray: 5 5,color:#000;
 
     subgraph Phase1 [Phase 1: Data Pipeline & Preprocessing]
-        RAW["Raw HAM10000 Images & CSV"] ::: data
-        A1["Person A: sam_preprocess.py\n(SAM + CLAHE Merged)"] ::: completed
-        B1["Person B: MetadataTokenizer"] ::: completed
-        C1["Person C: augmentation.py\n(MixUp/CutMix/RSPDA)"] ::: personC
+      RAW["Raw HAM10000 Images & CSV"]:::data
+      A1["Person A: sam_preprocess.py\n(SAM + CLAHE Merged)"]:::completed
+      B1["Person B: MetadataTokenizer"]:::completed
+      C1["Person C: augmentation.py\n(MixUp/CutMix/RSPDA)"]:::personC
         
         RAW --> A1
-        A1 -->|Masked & Enhanced Images| PROC["ml/data/processed/"] ::: data
+      A1 -->|Masked & Enhanced Images| PROC["ml/data/processed/"]:::data
         PROC --> A2
         RAW -->|Metadata CSV| B1
-        B1 -->|Tokenized IDs| A2["Person A: dataset.py\n(DataLoader)"] ::: completed
+      B1 -->|Tokenized IDs| A2["Person A: dataset.py\n(DataLoader)"]:::completed
         C1 -.->|Used during train| A2
-        A2 -->|Stratified 70/15/15| C2["Person C: verify_splits.py"] ::: personC
+      A2 -->|Stratified 70/15/15| C2["Person C: verify_splits.py"]:::personC
     end
 
     subgraph Phase2 [Phase 2: Tri-Branch Architecture & Fusion]
-        A2 -->|"Batch Images [B,3,256,256]"| A3["Person A: cnn.py\n(EfficientNetV2)"] ::: completed
-        A2 -->|"Batch Images [B,3,256,256]"| B2["Person B: vit.py\n(Swin Transformer V2)"] ::: completed
-        A2 -->|"Tokens [B,128]"| C3["Person C: bert.py\n(BERT Encoder)"] ::: personC
+      A2 -->|"Batch Images [B,3,256,256]"| A3["Person A: cnn.py\n(EfficientNetV2)"]:::completed
+      A2 -->|"Batch Images [B,3,256,256]"| B2["Person B: vit.py\n(Swin Transformer V2)"]:::completed
+      A2 -->|"Tokens [B,128]"| C3["Person C: bert.py\n(BERT Encoder)"]:::personC
         
-        A3 -->|"CNN Embed [B,512]"| B3["Person B: fusion.py\n(Cross-Attention)"] ::: personB
+      A3 -->|"CNN Embed [B,512]"| B3["Person B: fusion.py\n(Cross-Attention)"]:::personB
         B2 -->|"ViT Embed [B,512]"| B3
         C3 -->|"Metadata Embed [B,512]"| B3
         
-        B3 -->|Fused Embed| C4["Person C: model.py\n(SkinFuseNet Assembly)"] ::: personC
-        C5["Person C: loss.py\n(Focal Loss)"] ::: personC --> A4
-        C4 --> A4["Person A: train.py\n(Training Loop)"] ::: completed
+      B3 -->|Fused Embed| C4["Person C: model.py\n(SkinFuseNet Assembly)"]:::personC
+      C5["Person C: loss.py\n(Focal Loss)"]:::personC --> A4
+      C4 --> A4["Person A: train.py\n(Training Loop)"]:::completed
     end
 
     subgraph Phase3 [Phase 3: Training, Evaluation & Export]
-        A4 -->|Checkpoints| A5["Person A: Ablation Studies\n(7 Configurations)"] ::: personA
-        A5 -->|Best Model .pt| C6["Person C: export.py\n(TorchScript)"] ::: personC
-        A5 --> B4["Person B: evaluate.py\n(Metrics & Confusion Matrix)"] ::: personB
+      A4 -->|Checkpoints| A5["Person A: Ablation Studies\n(7 Configurations)"]:::personA
+      A5 -->|Best Model .pt| C6["Person C: export.py\n(TorchScript)"]:::personC
+      A5 --> B4["Person B: evaluate.py\n(Metrics & Confusion Matrix)"]:::personB
     end
 
     subgraph Phase4 [Phase 4: Backend Services]
-        C6 -->|skinfusenet.pt| B5["Person B: inference.py\n(Core Inference Service)"] ::: personB
-        C7["Person C: preprocess.py\n(API Image Preprocessing)"] ::: personC --> B5
-        B5 -->|Logits & Predictions| B6["Person B: gradcam.py\n(Heatmap Generation)"] ::: personB
-        B6 -->|Base64 Image| A6["Person A: predict.py\n(FastAPI Router)"] ::: personA
-        C8["Person C: schemas/predict.py\n(Pydantic Validation)"] ::: personC --> A6
+      C6 -->|skinfusenet.pt| B5["Person B: inference.py\n(Core Inference Service)"]:::personB
+      C7["Person C: preprocess.py\n(API Image Preprocessing)"]:::personC --> B5
+      B5 -->|Logits & Predictions| B6["Person B: gradcam.py\n(Heatmap Generation)"]:::personB
+      B6 -->|Base64 Image| A6["Person A: predict.py\n(FastAPI Router)"]:::personA
+      C8["Person C: schemas/predict.py\n(Pydantic Validation)"]:::personC --> A6
     end
 
     subgraph Phase5 [Phase 5: Frontend Experience & DevOps]
-        A6 -->|JSON Response| F1["Person B: ResultsPanel.jsx"] ::: personB
-        A6 -->|Probabilities| F2["Person C: ProbabilityChart.jsx"] ::: personC
-        A6 -->|GradCAM Overlay| F3["Person C: GradCAMViewer.jsx"] ::: personC
+      A6 -->|JSON Response| F1["Person B: ResultsPanel.jsx"]:::personB
+      A6 -->|Probabilities| F2["Person C: ProbabilityChart.jsx"]:::personC
+      A6 -->|GradCAM Overlay| F3["Person C: GradCAMViewer.jsx"]:::personC
         
-        F1 & F2 & F3 --> F4["Person C: App.jsx\n(Full Layout Assembly)"] ::: personC
-        F4 --> C9["Person C: docker-compose.yml"] ::: personC
-        C9 --> A7["Person A: 20-Point Integration QA"] ::: personA
+      F1 & F2 & F3 --> F4["Person C: App.jsx\n(Full Layout Assembly)"]:::personC
+      F4 --> C9["Person C: docker-compose.yml"]:::personC
+      C9 --> A7["Person A: 20-Point Integration QA"]:::personA
     end
 
     Phase1 --> Phase2
