@@ -215,13 +215,13 @@ flowchart TD
       classDef milestone fill:#e6e6e6,stroke:#111,stroke-width:2px,color:#111;
 
       subgraph Phase1 [Phase 1: Data Pipeline & Preprocessing]
-            RAW["HAM10000 images + metadata CSV"]:::data
-            A1["SAM segmentation + CLAHE\nsam_preprocess.py\nCOMPLETED"]:::completed
+            RAW["HAM10000 images + metadata CSV\nShared dataset input"]:::data
+            A1["Person A\nSAM segmentation + CLAHE\nsam_preprocess.py\nCOMPLETED"]:::completed
             PROC["Processed images\nml/data/processed/"]:::data
-            B1["Metadata tokenizer\nbert.py\nCOMPLETED"]:::completed
-            A2["Multimodal Dataset + DataLoader\ndataset.py\nCOMPLETED"]:::completed
-            C1["MixUp, CutMix, RSPDA\naugmentation.py\nPENDING"]:::pending
-            C2["Stratified 70/15/15 verification\nverify_splits.py\nPENDING"]:::pending
+            B1["Person B\nMetadata tokenizer\nbert.py\nCOMPLETED"]:::completed
+            A2["Person A\nMultimodal Dataset + DataLoader\ndataset.py\nCOMPLETED"]:::completed
+            C1["Person C\nMixUp, CutMix, RSPDA\naugmentation.py\nPENDING"]:::pending
+            C2["Person C\nStratified 70/15/15 verification\nverify_splits.py\nPENDING"]:::pending
 
             RAW --> A1 --> PROC --> A2
             RAW -->|Metadata| B1 -->|Token IDs + masks| A2
@@ -230,12 +230,12 @@ flowchart TD
       end
 
       subgraph Phase2 [Phase 2: Tri-Branch Architecture & Fusion]
-            A3["CNN branch\nEfficientNetV2-S + 512-d projection\ncnn.py - COMPLETED"]:::completed
-            B2["Vision Transformer branch\nSwin V2 + 512-d projection\nvit.py - COMPLETED"]:::completed
-            C3["BERT metadata encoder\nCLS embedding + 512-d projection\nbert.py - PENDING"]:::pending
-            B3["Cross-attention fusion\nVisual features + metadata\nfusion.py - PENDING"]:::pending
-            C4["Unified multimodal model\n7-class logits\nmodel.py - PENDING"]:::pending
-            C5["Class-balanced focal loss\n+ label smoothing\nloss.py - PENDING"]:::pending
+            A3["Person A\nCNN branch\nEfficientNetV2-S + 512-d projection\ncnn.py - COMPLETED"]:::completed
+            B2["Person B\nVision Transformer branch\nSwin V2 + 512-d projection\nvit.py - COMPLETED"]:::completed
+            C3["Person C\nBERT metadata encoder\nCLS embedding + 512-d projection\nbert.py - PENDING"]:::pending
+            B3["Person B\nCross-attention fusion\nVisual features + metadata\nfusion.py - PENDING"]:::pending
+            C4["Person C\nUnified multimodal model\n7-class logits\nmodel.py - PENDING"]:::pending
+            C5["Person C\nClass-balanced focal loss\n+ label smoothing\nloss.py - PENDING"]:::pending
 
             A2 -->|"Images [B,3,256,256]"| A3
             A2 -->|"Images [B,3,256,256]"| B2
@@ -248,11 +248,11 @@ flowchart TD
       end
 
       subgraph Phase3 [Phase 3: Training, Evaluation & Export]
-            A4["Training loop\nAdamW + AMP + cosine schedule\ntrain.py - COMPLETED"]:::completed
-            A5["Ablation experiments\n7 model configurations\nPENDING"]:::pending
-            B4["Evaluation suite\nF1, ROC-AUC, confusion matrix\nevaluate.py - PENDING"]:::pending
-            C6["Production artifact\nTorchScript / checkpoint\nexport.py - PENDING"]:::pending
-            M1["Validated best model"]:::milestone
+            A4["Person A\nTraining loop\nAdamW + AMP + cosine schedule\ntrain.py - COMPLETED"]:::completed
+            A5["Person A\nAblation experiments\n7 model configurations\nPENDING"]:::pending
+            B4["Person B\nEvaluation suite\nF1, ROC-AUC, confusion matrix\nevaluate.py - PENDING"]:::pending
+            C6["Person C\nProduction artifact\nTorchScript / checkpoint\nexport.py - PENDING"]:::pending
+            M1["Shared milestone\nValidated best model"]:::milestone
 
             C4 --> A4
             C5 --> A4
@@ -262,28 +262,28 @@ flowchart TD
       end
 
       subgraph Phase4 [Phase 4: Backend Inference Services]
-            C7["Image preprocessing service\nResize + normalize + metadata\npreprocess.py - PENDING"]:::pending
-            B5["Model loader\nLoad once on CPU/GPU\nmodel_loader.py - PENDING"]:::pending
-            B6["Inference service\nLogits, class, confidence\ninference.py - PENDING"]:::pending
-            B7["GradCAM heatmap\nBase64 overlay fallback\ngradcam.py - PENDING"]:::pending
-            A6["FastAPI router\n/predict + /health\nValidation + mock response - COMPLETED"]:::completed
-            C8["Pydantic schemas\nRequest/response validation\npredict.py - COMPLETED"]:::completed
+            C7["Person C\nImage preprocessing service\nResize + normalize + metadata\npreprocess.py - PENDING"]:::pending
+            C9["Person C\nModel loader\nLoad once on CPU/GPU\nmodel_loader.py - PENDING"]:::pending
+            B6["Person B\nInference service\nLogits, class, confidence\ninference.py - PENDING"]:::pending
+            B7["Person B\nGradCAM heatmap\nBase64 overlay fallback\ngradcam.py - PENDING"]:::pending
+            A6["Person A\nFastAPI router\n/predict + /health\nValidation + mock response - COMPLETED"]:::completed
+            C8["Person C\nPydantic schemas\nRequest/response validation\npredict.py - COMPLETED"]:::completed
 
-            M1 --> B5
+            M1 --> C9
             C7 --> B6
-            B5 --> B6 --> B7 -->|Prediction + overlay| A6
+            C9 --> B6 --> B7 -->|Prediction + overlay| A6
             C8 --> A6
       end
 
       subgraph Phase5 [Phase 5: Frontend, Deployment & QA]
-            F0["Input experience\nImageUpload + MetadataForm\nCOMPLETED"]:::completed
-            F1["API state hook\nusePrediction.js\nCOMPLETED"]:::completed
-            F2["Results panel\nClinical result + confidence\nPENDING"]:::pending
-            F3["Probability chart\n7-class ranked probabilities\nPENDING"]:::pending
-            F4["GradCAM viewer\nOriginal + heatmap overlay\nPENDING"]:::pending
-            F5["App layout assembly\nResponsive result workflow\nIN PROGRESS"]:::inProgress
-            D1["Docker + Compose\nBackend and frontend containers\nPENDING"]:::pending
-            Q1["20-point integration QA\nFinal demo + deployment\nPENDING"]:::pending
+            F0["Person A\nInput experience\nImageUpload + MetadataForm\nCOMPLETED"]:::completed
+            F1["Persons A + B\nAPI state hook\nusePrediction.js\nCOMPLETED"]:::completed
+            F2["Person B\nResults panel\nClinical result + confidence\nPENDING"]:::pending
+            F3["Person C\nProbability chart\n7-class ranked probabilities\nPENDING"]:::pending
+            F4["Person C\nGradCAM viewer\nOriginal + heatmap overlay\nPENDING"]:::pending
+            F5["Person C\nApp layout assembly\nResponsive result workflow\nIN PROGRESS"]:::inProgress
+            D1["Person C\nDocker + Compose\nBackend and frontend containers\nPENDING"]:::pending
+            Q1["Person A\n20-point integration QA\nFinal demo + deployment\nPENDING"]:::pending
 
             A6 -->|JSON response| F1
             F0 --> F1 --> F2
