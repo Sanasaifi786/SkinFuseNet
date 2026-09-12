@@ -23,6 +23,7 @@ This document provides an up-to-date audit of the entire **SkinFuseNet** codebas
 | **ML Preprocessing** | SAM Lesion Segmentation Script | `ml/src/preprocess/sam_preprocess.py` | ✅ **Completed** (Person A / W3) — GPU-first, fallback + failure log |
 | **ML Dataset** | PyTorch Dataset + DataLoader Splits | `ml/src/dataset.py` | ✅ **Completed** (Person A / W4) — multimodal, edge-case handling, stratified 70/15/15 split |
 | **ML Testing** | Dataset Verification Script | `ml/tests/verify_dataset.py` | ✅ **Completed** (Person A / W4) |
+| **ML Augmentation** | Data Augmentations | `ml/src/preprocess/augmentation.py` | ✅ **Completed** (Person C / W3) — MixUp, CutMix, RSPDA |
 | **ML CNN Branch** | EfficientNetV2-S Feature Extractor | `ml/src/branches/cnn.py` | ✅ **Completed** (Person A / W5) — d=512 projection + GradCAM hooks |
 | **ML Training** | Training Loop (GPU, Mixed Precision) | `ml/src/train.py` | ✅ **Completed** (Person A / W6) — AdamW, CosineAnnealing, Mock model ready to swap |
 | **Backend API Scaffold** | `backend/app/main.py` (444 B) | FastAPI application with CORS middleware configured and router mounting. |
@@ -40,7 +41,6 @@ This document provides an up-to-date audit of the entire **SkinFuseNet** codebas
 
 The following files exist in the repository structure but are currently 0-byte placeholders or not yet written:
 
-- `ml/src/preprocess/augmentation.py` (0 bytes)
 - `ml/src/fusion.py` (0 bytes)
 - `ml/src/loss.py` (0 bytes)
 - `ml/src/model.py` (0 bytes)
@@ -63,7 +63,7 @@ The following files exist in the repository structure but are currently 0-byte p
 
 | Domain | Done | Remaining | Est. Progress |
 |---|---|---|---:|
-| **ML Data & Preprocessing** | SAM+CLAHE script (`sam_preprocess.py`), SAM checkpoint | `augmentation.py` (MixUp/CutMix/RSPDA), `dataset.py` PyTorch DataLoader, split verification | **30%** |
+| **ML Data & Preprocessing** | SAM+CLAHE script, SAM checkpoint, `augmentation.py`, `dataset.py` | split verification (`verify_splits.py`) | **85%** |
 | **ML Models & Architecture** | BERT Tokenizer class (`bert.py`) | EfficientNetV2 (`cnn.py`), Swin Transformer V2 (`vit.py`), BERT PyTorch module encoder, Cross-Attention Fusion (`fusion.py`), Model assembly (`model.py`), Focal Loss (`loss.py`) | **15%** |
 | **Training & Evaluation** | Setup & environment | `train.py` training loop, early stopping, 7 ablation experiments, `evaluate.py` (metrics, per-class report, confusion matrix, ROC-AUC) | **0%** |
 | **Model Export & Serving** | Architecture planned | `export.py` (TorchScript / state dict), `model_loader.py`, backend `preprocess.py` service, backend `inference.py` service, backend `gradcam.py` | **0%** |
@@ -81,14 +81,18 @@ The following files exist in the repository structure but are currently 0-byte p
 *Primary Layers:* SAM Segmentation → Dataset Loader → EfficientNetV2 → Training Orchestration → Backend Router Integration → Full Integration QA
 
 #### Remaining Tasks:
-1. **Week 3 (Data Preprocessing):**
+1. **Week 3 (Data Preprocessing & Verification):**
    - [x] ~~Implement `ml/src/preprocess/sam_preprocess.py` using `ml/checkpoints/sam_vit_b.pth`.~~
-   - [ ] **ACTION NEEDED**: Run `sam_preprocess.py` on the full HAM10000 dataset. Coordinate output format with Person B.
-2. **Week 4 (Dataset Loading):**
+   - [x] ~~Run `sam_preprocess.py` on the full HAM10000 dataset.~~
+   - [ ] Validate the combined SAM+CLAHE output across the full dataset.
+   - [ ] Test augmentations on sample images and verify label mixing mathematics.
+2. **Week 4 (Dataset Loading & Split Verification):**
    - [x] ~~Implement `ml/src/dataset.py` with multi-modal inputs.~~
    - [x] ~~Handle edge cases: missing ages, unknown localization/sex, corrupt images.~~
    - [x] ~~Write `ml/tests/verify_dataset.py` to validate tensor shapes, batch dtypes, and value normalization.~~
-   - [ ] **ACTION NEEDED**: Download HAM10000 metadata CSV → place at `ml/data/raw/HAM10000_metadata.csv`.
+   - [x] ~~Download HAM10000 metadata CSV → place at `ml/data/raw/HAM10000_metadata.csv`.~~
+   - [ ] Create split verification script (`ml/tests/verify_splits.py`) to enforce stratified 70/15/15 train/val/test split across all 7 classes.
+   - [ ] Log class distribution and minority class support counts in `team/split_verification_results.md`.
 3. **Week 5 (CNN Branch):**
    - [x] ~~Implement `ml/src/branches/cnn.py` using EfficientNetV2-S.~~
    - [x] ~~Project feature output to shared embedding dimension ($d=512$).~~
@@ -118,7 +122,6 @@ The following files exist in the repository structure but are currently 0-byte p
 #### Remaining Tasks:
 1. **Week 3 (CLAHE):**
    - [x] CLAHE contrast enhancement logic was successfully merged into Person A's `sam_preprocess.py` script. (**Done**)
-   - [ ] Validate the combined SAM+CLAHE output across the full dataset.
 2. **Week 4 (BERT Tokenization):**
    - [x] Implement `ml/src/branches/bert.py` `MetadataTokenizer` class (**Done**).
    - [ ] Test tokenization batching and attention masks with `dataset.py`.
@@ -152,12 +155,8 @@ The following files exist in the repository structure but are currently 0-byte p
 
 #### Remaining Tasks:
 1. **Week 3 (Data Augmentation Pipeline):**
-   - [ ] Implement `ml/src/preprocess/augmentation.py` with MixUp, CutMix, and dermoscopy-tailored RSPDA (Rotated & Shifted Patch Data Augmentation).
-   - [ ] Test augmentations on sample images and verify label mixing mathematics.
-2. **Week 4 (Stratified Split Verification):**
-   - [ ] Create split verification script (`ml/tests/verify_splits.py`) to enforce stratified 70/15/15 train/val/test split across all 7 classes.
-   - [ ] Log class distribution and minority class support counts in `team/split_verification_results.md`.
-3. **Week 5 (BERT Encoder Network):**
+   - [x] ~~Implement `ml/src/preprocess/augmentation.py` with MixUp, CutMix, and dermoscopy-tailored RSPDA.~~
+2. **Week 5 (BERT Encoder Network):**
    - [ ] Implement PyTorch neural network module in `ml/src/branches/bert.py` wrapping HuggingFace `BertModel` (or `ClinicalBERT`).
    - [ ] Extract `[CLS]` token representation and project to shared embedding dimension ($d=512$) with freezing/unfreezing strategy.
 4. **Week 6 (Loss & Model Assembly):**
@@ -188,8 +187,8 @@ The following files exist in the repository structure but are currently 0-byte p
 |:---:|---|:---:|---|
 | **W1** | Project Setup & HAM10000 Exploration | ✅ **100%** | Environment, dependencies, dataset exploration |
 | **W2** | Scaffolding, Fast Prototypes & Mocks | ✅ **100%** | Mock FastAPI, React forms, notebook validations |
-| **W3** | Production Preprocessing Pipelines | ⏳ **35%** | `sam_preprocess.py` (with CLAHE merged) ✅; Need `augmentation.py` |
-| **W4** | Dataset Finalisation & Tokenization | ⏳ **35%** | BERT Tokenizer ✅; Need `dataset.py` & Split Verification |
+| **W3** | Production Preprocessing Pipelines | ⏳ **90%** | `sam_preprocess.py` (with CLAHE merged) ✅; `augmentation.py` (Testing Pending) ⏳ |
+| **W4** | Dataset Finalisation & Tokenization | ⏳ **80%** | BERT Tokenizer ✅; `dataset.py` ✅; Need Split Verification |
 | **W5** | Three Feature Extraction Branches | ⏳ **0%** | EfficientNetV2 (`cnn.py`), Swin (`vit.py`), BERT Module (`bert.py`) |
 | **W6** | Cross-Attention Fusion & Model Assembly | ⏳ **0%** | `fusion.py`, `loss.py`, `model.py`, `train.py` |
 | **W7** | Training, Ablation Study & Export | ⏳ **0%** | 7 ablation runs, `evaluate.py`, `export.py` |
@@ -220,7 +219,7 @@ flowchart TD
             PROC["Processed images\nml/data/processed/"]:::data
             B1["Person B\nMetadata tokenizer\nbert.py\nCOMPLETED"]:::completed
             A2["Person A\nMultimodal Dataset + DataLoader\ndataset.py\nCOMPLETED"]:::completed
-            C1["Person C\nMixUp, CutMix, RSPDA\naugmentation.py\nPENDING"]:::pending
+            C1["Person C\nMixUp, CutMix, RSPDA\naugmentation.py\nCOMPLETED"]:::completed
             C2["Person C\nStratified 70/15/15 verification\nverify_splits.py\nPENDING"]:::pending
 
             RAW --> A1 --> PROC --> A2
@@ -299,6 +298,6 @@ flowchart TD
 ```
 
 ### Action Items for Today:
-1. **Person A:** You have completed `sam_preprocess.py`, `dataset.py`, `cnn.py`, and `train.py`. Next, run `sam_preprocess.py` on the full HAM10000 dataset, download the metadata CSV, and wait for Person C to finish `loss.py` and `model.py` so you can swap them into your training loop. Then orchestrate the 7 ablation training runs (Week 7).
-2. **Person B:** Your Week 3 CLAHE task was successfully merged into Person A's `sam_preprocess.py`. Validate the combined output, then proceed with Week 6 Cross-Attention `fusion.py`.
-3. **Person C:** Complete `ml/src/preprocess/augmentation.py`, write `ml/tests/verify_splits.py`, implement the PyTorch module in `ml/src/branches/bert.py`, and draft `ml/src/loss.py` (Focal Loss) and `ml/src/model.py`.
+1. **Person A:** You have completed data preparation and model foundations. Since you have the GPU, your new priority is to take over the verification tasks: Validate the combined SAM+CLAHE output, test the data augmentations on sample images, and write `ml/tests/verify_splits.py`. After that, you can work on Frontend/Backend tasks while waiting for Person C to unblock training.
+2. **Person B:** Your Week 3 CLAHE task was successfully merged into Person A's `sam_preprocess.py`. Test the BERT tokenization batching (Week 4), and then proceed with Week 6 Cross-Attention `fusion.py`.
+3. **Person C:** Implement the PyTorch module in `ml/src/branches/bert.py`, and draft `ml/src/loss.py` (Focal Loss) and `ml/src/model.py`.
