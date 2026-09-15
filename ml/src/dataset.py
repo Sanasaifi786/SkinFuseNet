@@ -7,6 +7,8 @@ from pathlib import Path
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from src.preprocess.image_utils import load_and_preprocess_image
+
 # Import Person B's Tokenizer
 from src.branches.bert import MetadataTokenizer
 
@@ -47,6 +49,16 @@ class SkinLesionDataset(Dataset):
         # Drop rows with missing essential image_id or dx
         self.df.dropna(subset=['image_id', 'dx'], inplace=True)
         
+        # Aggressively filter missing physical images
+        valid_rows = []
+        for _, row in self.df.iterrows():
+            img_path = self.img_dir / f"{row['image_id']}.jpg"
+            if img_path.exists():
+                valid_rows.append(True)
+            else:
+                valid_rows.append(False)
+        self.df = self.df[valid_rows].reset_index(drop=True)
+        
         # Impute age: fill missing with median age
         median_age = self.df['age'].median()
         self.df['age'] = self.df['age'].fillna(median_age)
@@ -61,33 +73,11 @@ class SkinLesionDataset(Dataset):
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
         
-        # 1. Image Loading
+        # 1. Image Loading & Preprocessing (Shared logic)
         img_name = f"{row['image_id']}.jpg"
         img_path = self.img_dir / img_name
         
-        # Fallback if image doesn't exist
-        if not img_path.exists():
-            # Return a blank black image
-            image = np.zeros((256, 256, 3), dtype=np.uint8)
-        else:
-            image = cv2.imread(str(img_path))
-            if image is None:
-                image = np.zeros((256, 256, 3), dtype=np.uint8)
-            else:
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                
-        # Resize all to 256x256
-        image = cv2.resize(image, (256, 256))
-        
-        if self.transform:
-            image = self.transform(image)
-        else:
-            # Default transform if none provided
-            default_transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            image = default_transform(image)
+        image = load_and_preprocess_image(img_path, self.transform)
             
         # 2. Metadata Tokenization
         age = int(row['age'])

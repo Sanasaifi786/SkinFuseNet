@@ -77,26 +77,6 @@ class BertMetadataBranch(nn.Module):
         for param in self.bert.parameters():
             param.requires_grad = False
 
-    def unfreeze_backbone(self):
-
-        """Unfreezes all weights in the BERT backbone for end-to-end fine-tuning."""
-        for param in self.bert.parameters():
-            param.requires_grad = True
-
-    def unfreeze_last_n_layers(self, n=2):
-
-        """
-        Unfreezes the pooler and the top n transformer encoder layers.
-        Used after initial warm-up epochs in the training loop.
-        """
-        if hasattr(self.bert, 'pooler') and self.bert.pooler is not None:
-            for param in self.bert.pooler.parameters():
-                param.requires_grad = True
-        num_layers = len(self.bert.encoder.layer)
-        for i in range(num_layers - n, num_layers):
-            for param in self.bert.encoder.layer[i].parameters():
-                param.requires_grad = True
-
     def forward(self, input_ids, attention_mask):
         """
         Forward pass: takes token IDs and attention mask, returns [B, embed_dim].

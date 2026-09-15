@@ -3,10 +3,10 @@ predict.py — API router for /predict and /health endpoints.
 Week 2: returns mock data. Week 8: replaced with real model inference.
 """
 
-import base64
-import io
+
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.schemas.predict import PredictionResponse, HealthResponse
+from app.services.inference import run_inference
 
 router = APIRouter()
 
@@ -20,17 +20,7 @@ VALID_LOCALIZATIONS = {
 VALID_SEX = {'male', 'female'}
 
 
-def _make_fake_gradcam_base64() -> str:
-    """
-    Returns a small red PNG as base64 — placeholder for real GradCAM heatmap.
-    Frontend uses this to test the GradCAMViewer component.
-    """
-    # 10x10 red PNG in base64 (hardcoded — no image library needed)
-    red_png_b64 = (
-        "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8"
-        "z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg=="
-    )
-    return red_png_b64
+
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -90,24 +80,8 @@ async def predict(
             detail=f"Invalid localization '{localization}'. Must be one of: {sorted(VALID_LOCALIZATIONS)}"
         )
 
-    # ── Mock response (replace with real inference in Week 8) ───────────────
+    # ── Inference (Week 8) ──────────────────────────────────────────────────
 
-    print(f"[MOCK] Received image: {image.filename} ({len(contents)/1024:.1f} KB)")
-    print(f"[MOCK] Patient: age={age}, sex={sex}, location={localization}")
-
-    mock_response = PredictionResponse(
-        predicted_class="MEL",
-        confidence=0.87,
-        probabilities={
-            "MEL":   0.87,
-            "NV":    0.06,
-            "BKL":   0.03,
-            "BCC":   0.02,
-            "AKIEC": 0.01,
-            "VASC":  0.005,
-            "DF":    0.005,
-        },
-        gradcam_image=_make_fake_gradcam_base64(),
-    )
-
-    return mock_response
+    # Pass validated data to inference service
+    result = run_inference(contents, age, sex, localization)
+    return result
