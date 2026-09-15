@@ -1,4 +1,4 @@
-﻿# SkinFuseNet â€” Week 4
+# SkinFuseNet â€” Week 4
 ### Dataset Finalisation Â· BERT Tokenisation Â· Stratified Split Verification
 
 > **Phase:** ML â€” Data Pipeline  
@@ -473,11 +473,11 @@ Write in `team/week4_review.md` and commit.
 - [x] Both new fields returned in `__getitem__` dict  âœ…
 
 ### Split verification
-- [ ] `split_verification.py` written and run  âš ï¸ **MISSING â€” Person C to implement**
-- [ ] All 7 classes within Â±2% across train/val/test
-- [ ] DF and VASC both have â‰¥5 samples in test set
-- [ ] Same split produced with `random_state=42` across 3 runs
-- [ ] `team/split_verification_results.md` committed
+- [x] `split_verification.py` written and run
+- [x] All 7 classes within ±2% across train/val/test
+- [x] DF and VASC both have ≥5 samples in test set
+- [x] Same split produced with `random_state=42` across 3 runs
+- [x] `team/split_verification_results.md` committed
 
 ### verify_dataset.py
 - [x] Written with shape/dtype checks  âœ…

@@ -25,7 +25,7 @@
 | `team/API_CONTRACT.md` (agreed embed dim = 512) | Team | ❌ **Missing — create immediately** |
 | `ml/src/branches/cnn.py` (EfficientNetV2-S, d=512) | Person A | ✅ **Done** — GradCAM hooks registered |
 | `ml/src/branches/vit.py` (Swin Transformer V2) | Person B | ✅ **Done** — completed |
-| `ml/src/branches/bert.py` (BERT encoder module, CLS projection) | Person C | ⚠️ **Tokenizer done**, full encoder module missing |
+| `ml/src/branches/bert.py` (BERT encoder module, CLS projection) | Person C | ✅ **Done** |
 | Shape verification `[B, 512]` for all branches | Team | ❌ **Pending** |
 | `team/week5_review.md` | Team | ❌ **Missing** |
 
@@ -133,14 +133,14 @@ Do not write a single line of branch code before this is agreed.
 - [ ] `pretrained=True` weights confirmed loading
 
 ### Person B â€” Swin Transformer V2
-- [ ] `vit.py` written and tested  âš ï¸ **FILE IS EMPTY â€” Person B must implement**
+- [ ] `vit.py` written and tested  âš ï¸  **FILE IS EMPTY â€” Person B must implement**
 - [ ] Output shape `[B, 512]` matches CNN
 - [ ] Pretrained Swin V2 weights load without error
 
 ### Person C â€” BERT Encoder
-- [ ] BERT encoder network module written in `bert.py`  âš ï¸ **Full encoder missing (tokenizer only)**
-- [ ] `[CLS]` token extracted and projected to `[B, 512]`
-- [ ] Freezing/unfreezing strategy documented
+- [x] BERT encoder network module written in `bert.py`
+- [x] `[CLS]` token extracted and projected to `[B, 512]`
+- [x] Freezing/unfreezing strategy documented
 
 ### Team
 - [ ] All 3 branches produce identical-shaped outputs `[B, 512]`

@@ -1,4 +1,4 @@
-﻿# SkinFuseNet - Week 6
+# SkinFuseNet - Week 6
 ### Model Assembly + Focal Loss â€” Cross-attention fusion â€” Full SkinFuseNet model â€” Training loop
 
 > **Phase:** ML - Model Assembly  
@@ -128,8 +128,8 @@ If files are not ready by Wednesday, Person C uses placeholder classes that retu
 - [ ] Forward: (cnn_emb [B,D], vit_emb [B,D], meta_emb [B,D]) â†’ fused [B,D]
 
 ### Person C
-- [ ] loss.py first: FocalLoss class with gamma=2.0, label_smoothing=0.1
-- [ ] Verify focal loss: easy example (model very confident) â†’ focal loss << crossentr...
+- [x] loss.py first: FocalLoss class with gamma=2.0, label_smoothing=0.1
+- [x] Verify focal loss: easy example (model very confident) → focal loss << crossentr...
 - [ ] model.py: SkinFuseNet class takes CNN branch, ViT branch, BERT branch, fusion as...
 - [ ] Forward: (image [B,3,256,256], input_ids [B,128], attention_mask [B,128]) â†’ logi...
 - [ ] Add classification head: nn.Sequential(LayerNorm(D), Dropout(0.3), Linear(D,7))

@@ -244,12 +244,12 @@ skinfusenet/
 
 ### 🚧 In Progress
 - [ ] Week 3 — Augmentation pipeline (MixUp, CutMix, RSPDA) — **Person C**
-- [ ] Week 4 — Stratified split verification — **Person C**
-- [ ] Week 5 — BERT encoder branch — **Person C**
+- [x] Week 4 — Stratified split verification — **Person C**
+- [x] Week 5 — BERT encoder branch — **Person C**
 
 ### 📅 Upcoming
 - [ ] Week 6 — Cross-attention fusion layer — **Person B**
-- [ ] Week 6 — Focal loss + label smoothing — **Person C**
+- [x] Week 6 — Focal loss + label smoothing — **Person C**
 - [ ] Week 7 — Training run (100 epochs), ablation study (7 configs) — **Person A**
 - [ ] Week 7 — Export `skinfusenet.pt` — **Person C**
 - [ ] Week 8 — Real `inference.py` with loaded model — **Person B**
