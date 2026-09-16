@@ -248,9 +248,9 @@ flowchart TD
 
       subgraph Phase3 [Phase 3: Training, Evaluation & Export]
             A4["Person A\nTraining loop\nAdamW + AMP + cosine schedule\ntrain.py - COMPLETED"]:::completed
-            A5["Person A\nAblation experiments\n7 model configurations\nPENDING"]:::pending
-            B4["Person B\nEvaluation suite\nF1, ROC-AUC, confusion matrix\nevaluate.py - PENDING"]:::pending
-            C6["Person C\nProduction artifact\nTorchScript / checkpoint\nexport.py - PENDING"]:::pending
+            A5["Person A\nRun ablation experiments\n7 model configurations\nPENDING"]:::pending
+            B4["Person B (Writes) & Person A (Runs)\nEvaluation suite\nF1, ROC-AUC, confusion matrix\nevaluate.py - PENDING"]:::pending
+            C6["Person C (Writes) & Person A (Runs)\nProduction artifact\nTorchScript / checkpoint\nexport.py - PENDING"]:::pending
             M1["Shared milestone\nValidated best model"]:::milestone
 
             C4 --> A4
@@ -296,6 +296,130 @@ flowchart TD
     Phase3 --> Phase4
     Phase4 --> Phase5
 ```
+
+## 👤 Team Work Allocation
+
+### Person A
+**Current:** Training Loop Setup (Waiting on `model.py` swap)
+**Next:** Run 100-epoch Training, Run Ablations, Execute `evaluate.py`, Execute `export.py`
+**Blocked By:** Person C (Model Assembly)
+
+### Person B
+**Current:** Inference Service (`inference.py`)
+**Next:** Write `evaluate.py` (for Person A to run) & Backend GradCAM
+**Blocked By:** Person A (Exported Model Checkpoint)
+
+### Person C
+**Current:** Model Assembly (`model.py`)
+**Next:** Write `export.py` (for Person A to run) & Frontend Visualizations
+**Blocked By:** None
+
+
+## Frontend Remaining Work
+* [x] Base React App Scaffold
+* [x] ImageUpload Component
+* [x] MetadataForm Component
+* [x] usePrediction API Hook
+* [ ] ResultsPanel Component
+* [ ] ProbabilityChart Component (Recharts)
+* [ ] GradCAMViewer Component
+* [ ] Loading States & Skeletons
+* [ ] Error Handling UI
+
+## Backend Remaining Work
+### APIs
+* [x] POST /predict (Mock)
+* [ ] POST /predict (Real Inference integration)
+### Services
+* [ ] `inference.py` (Load PyTorch model and predict)
+* [ ] `preprocess.py` (SAM+CLAHE at runtime)
+* [ ] `gradcam.py` (Heatmap generation)
+### Validation & Error Handling
+* [x] Pydantic Request Validation (Size, MIME, Bounds)
+* [ ] Comprehensive Exception Handlers (500s)
+
+## Integration Work
+* **Frontend upload UI exists + Backend API route exists → Full Integration Pending**: We need the backend `/predict` route to stop returning mocked responses and start using the real `inference.py` service. The frontend needs to be updated to render the real GradCAM images and probabilities.
+
+## 🐞 Bugs / Issues
+
+| Severity | Issue | Location | Status | Owner |
+| -------- | ----- | -------- | ------ | ----- |
+| High | Missing exception handler for missing tensor conversions during inference | `backend/app/routers/predict.py` | ⬜ Not Started | Unassigned |
+
+## 🧪 Testing Checklist
+
+### Unit Testing
+* [ ] Frontend Unit Tests (Jest/React Testing Library)
+* [ ] Backend Unit Tests (Pytest for services)
+* [x] ML Dataloader and Augmentation Tests (Verified)
+
+### Integration Testing
+* [ ] Frontend-Backend Integration Tests
+
+### End-to-End Testing
+* [ ] End-to-End User Flow Tests (Cypress/Playwright)
+
+## 🔒 Security Checklist
+* [ ] `.env` handling (ensure no secrets are committed)
+* [x] File upload validation (MIME type and 10MB limits exist)
+* [ ] Rate limiting on `/predict`
+* [x] CORS configuration (Currently allows all origins in dev)
+
+## 🚀 Deployment Checklist
+* [ ] `Dockerfile` for Backend
+* [ ] `Dockerfile` for Frontend
+* [ ] `docker-compose.yml`
+* [ ] Production `uvicorn` configuration
+* [ ] Hosted staging environment
+
+## 🧹 Technical Debt
+* Replace the manual HTTP status code exceptions in the backend routers with a centralized error handling middleware.
+* Refactor the large `App.jsx` component into smaller, manageable state containers.
+
+## 📌 Decisions Needed From Team
+* Which hosting provider will we use for the final demo (e.g., HuggingFace Spaces, AWS, Render)?
+* Should we strictly enforce a CPU-only inference fallback if GPU is unavailable in staging?
+
+## ✅ Recently Completed
+* **Person A**: Fully verified SAM+CLAHE outputs and data augmentations mathematically. Tested the BERT Tokenizer shapes successfully.
+* **Person A/C**: Stratified 70/15/15 dataset splits verified.
+* **Person B**: Swin Transformer V2 and BERT modules implemented.
+* **Person C**: Cross-Attention Fusion implemented and Focal Loss integrated.
+
+## 🎯 Next Team Session (Recommended Plan)
+1. **Person C**: Write `model.py` integrating the 3 branches and fusion layer.
+2. **Person C**: Verify the forward pass of `model.py` returns `[B, 7]`.
+3. **Person A**: Swap the mock model in `train.py` with `model.py` and run a 1-epoch test.
+4. **Person B**: Write the `inference.py` stub to prepare for the model weights.
+5. **Team**: Verify everything merges correctly to `main`.
+
+---
+
+### Team Rule
+Whenever a developer:
+* starts a task → change status to `In Progress`
+* finishes a task → mark it completed
+* finds a bug → add it to Bugs
+* gets blocked → document the blocker
+* adds a new feature → add remaining integration/testing work
+* changes architecture → update README
+* creates or changes APIs → update API-related documentation
+
+**This file must be updated in the SAME PR/commit as the relevant feature whenever practical.**
+
+### Team Workflow
+1. Before coding, check the execution board.
+2. Do not start a task already assigned to someone else.
+3. Mark your task `In Progress`.
+4. Create a separate branch where appropriate.
+5. Keep tasks small enough to merge regularly.
+6. Test your changes.
+7. Update documentation before marking work complete.
+8. Mention blockers immediately.
+9. Avoid huge unreviewed changes.
+10. Pull/rebase latest changes before merging.
+
 
 ### Action Items for Today:
 1. **Person A:** You have completed data preparation and model foundations. The `verify_splits.py` task was already completed by Person C. Your remaining verification tasks are: Validate the combined SAM+CLAHE output, and test the data augmentations on sample images. After that, you can work on Frontend/Backend tasks while waiting for Person C to finish `model.py` and unblock training.
