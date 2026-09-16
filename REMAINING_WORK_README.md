@@ -84,8 +84,8 @@ The following files exist in the repository structure but are currently 0-byte p
 1. **Week 3 (Data Preprocessing & Verification):**
    - [x] ~~Implement `ml/src/preprocess/sam_preprocess.py` using `ml/checkpoints/sam_vit_b.pth`.~~
    - [x] ~~Run `sam_preprocess.py` on the full HAM10000 dataset.~~
-   - [ ] Validate the combined SAM+CLAHE output across the full dataset.
-   - [ ] Test augmentations on sample images and verify label mixing mathematics.
+   - [x] ~~Validate the combined SAM+CLAHE output across the full dataset.~~
+   - [x] ~~Test augmentations on sample images and verify label mixing mathematics.~~
 2. **Week 4 (Dataset Loading & Split Verification):**
    - [x] ~~Implement `ml/src/dataset.py` with multi-modal inputs.~~
    - [x] ~~Handle edge cases: missing ages, unknown localization/sex, corrupt images.~~
@@ -124,13 +124,13 @@ The following files exist in the repository structure but are currently 0-byte p
    - [x] CLAHE contrast enhancement logic was successfully merged into Person A's `sam_preprocess.py` script. (**Done**)
 2. **Week 4 (BERT Tokenization):**
    - [x] Implement `ml/src/branches/bert.py` `MetadataTokenizer` class (**Done**).
-   - [ ] Test tokenization batching and attention masks with `dataset.py`.
+   - [x] ~~Test tokenization batching and attention masks with `dataset.py`.~~
 3. **Week 5 (Vision Transformer Branch):**
    - [x] Implement `ml/src/branches/vit.py` using Swin Transformer V2 (`swin_v2_b` or `swin_v2_t`). (**Done**)
    - [x] Project token embedding output to shared dimension ($d=512$). (**Done**)
 4. **Week 6 (Cross-Attention Fusion):**
-   - [ ] Implement `ml/src/fusion.py` Cross-Attention module (Visual tokens query Metadata, or bidirectional cross-attention).
-   - [ ] Add projection head and layer normalization before final classification layer.
+   - [x] ~~Implement `ml/src/fusion.py` Cross-Attention module (Visual tokens query Metadata, or bidirectional cross-attention).~~
+   - [x] ~~Add projection head and layer normalization before final classification layer.~~
 5. **Week 7 (Evaluation):**
    - [ ] Implement `ml/src/evaluate.py` to compute accuracy, balanced accuracy, precision, recall, macro F1, per-class metrics, confusion matrix, and ROC-AUC curves.
    - [ ] Generate evaluation plots and output `team/final_results.md`.
@@ -187,7 +187,7 @@ The following files exist in the repository structure but are currently 0-byte p
 |:---:|---|:---:|---|
 | **W1** | Project Setup & HAM10000 Exploration | ✅ **100%** | Environment, dependencies, dataset exploration |
 | **W2** | Scaffolding, Fast Prototypes & Mocks | ✅ **100%** | Mock FastAPI, React forms, notebook validations |
-| **W3** | Production Preprocessing Pipelines | ⏳ **90%** | `sam_preprocess.py` (with CLAHE merged) ✅; `augmentation.py` (Testing Pending) ⏳ |
+| **W3** | Production Preprocessing Pipelines | ✅ **100%** | `sam_preprocess.py` (with CLAHE merged) ✅; `augmentation.py` (Testing Completed) ✅ |
 | **W4** | Dataset Finalisation & Tokenization | ✅ **100%** | BERT Tokenizer ✅; `dataset.py` ✅; Split Verification ✅ |
 | **W5** | Three Feature Extraction Branches | ✅ **100%** | EfficientNetV2 ✅, Swin ✅, BERT Module ✅ |
 | **W6** | Cross-Attention Fusion & Model Assembly | ⏳ **25%** | `loss.py` ✅; Need `fusion.py`, `model.py`, `train.py` (swap) |
@@ -220,7 +220,7 @@ flowchart TD
             B1["Person B\nMetadata tokenizer\nbert.py\nCOMPLETED"]:::completed
             A2["Person A\nMultimodal Dataset + DataLoader\ndataset.py\nCOMPLETED"]:::completed
             C1["Person C\nMixUp, CutMix, RSPDA\naugmentation.py\nCOMPLETED"]:::completed
-            C2["Person C\nStratified 70/15/15 verification\nverify_splits.py\nPENDING"]:::pending
+            C2["Person A\nStratified 70/15/15 verification\nverify_splits.py\nCOMPLETED"]:::completed
 
             RAW --> A1 --> PROC --> A2
             RAW -->|Metadata| B1 -->|Token IDs + masks| A2
@@ -231,10 +231,10 @@ flowchart TD
       subgraph Phase2 [Phase 2: Tri-Branch Architecture & Fusion]
             A3["Person A\nCNN branch\nEfficientNetV2-S + 512-d projection\ncnn.py - COMPLETED"]:::completed
             B2["Person B\nVision Transformer branch\nSwin V2 + 512-d projection\nvit.py - COMPLETED"]:::completed
-            C3["Person C\nBERT metadata encoder\nCLS embedding + 512-d projection\nbert.py - PENDING"]:::pending
-            B3["Person B\nCross-attention fusion\nVisual features + metadata\nfusion.py - PENDING"]:::pending
+            C3["Person C\nBERT metadata encoder\nCLS embedding + 512-d projection\nbert.py - COMPLETED"]:::completed
+            B3["Person B/C\nCross-attention fusion\nVisual features + metadata\nfusion.py - COMPLETED"]:::completed
             C4["Person C\nUnified multimodal model\n7-class logits\nmodel.py - PENDING"]:::pending
-            C5["Person C\nClass-balanced focal loss\n+ label smoothing\nloss.py - PENDING"]:::pending
+            C5["Person C\nClass-balanced focal loss\n+ label smoothing\nloss.py - COMPLETED"]:::completed
 
             A2 -->|"Images [B,3,256,256]"| A3
             A2 -->|"Images [B,3,256,256]"| B2

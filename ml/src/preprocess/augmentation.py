@@ -21,7 +21,7 @@ def mixup(image1,label1,image2, label2, alpha = 0.4,num_classes = 7):
     """
 
     if alpha > 0:
-        lam = float(torch.distributions.Beta(alpha,alpha).sample().item)
+        lam = float(torch.distributions.Beta(alpha,alpha).sample().item())
     else:
         lam = 1.0
     
