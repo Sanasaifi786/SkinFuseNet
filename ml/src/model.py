@@ -1,3 +1,5 @@
+import sys
+from pathlib import Path
 import torch
 import torch.nn as nn
 
@@ -6,6 +8,9 @@ from src.branches.vit import SwinTransformerBranch
 from src.branches.bert import BertMetadataBranch
 from src.fusion import CrossAttentionFusion
 
+ml_dir = Path(__file__).resolve().parents[1]
+if str(ml_dir) not in sys.path:
+    sys.path.insert(0, str(ml_dir))
 
 class SkinFuseNetModel(nn.Module):
     """
@@ -33,7 +38,7 @@ class SkinFuseNetModel(nn.Module):
         self.cnn_branch = EfficientNetV2Branch(embed_dim=embed_dim, pretrained=pretrained)
         self.vit_branch = SwinTransformerBranch(embedding_dim=embed_dim)
         self.bert_branch = BertMetadataBranch(embed_dim=embed_dim, pretrained=pretrained, freeze_bert=freeze_bert)
-        self.fusion = CrossAttentionFusion(embed_dim=embed_dim, num_heads=8, dropout=0.1)
+        self.fusion = CrossAttentionFusion(embedding_dim=embed_dim, num_heads=8)
 
         self.classifier = nn.Sequential(
             nn.LayerNorm(embed_dim),
