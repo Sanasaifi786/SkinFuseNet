@@ -10,20 +10,13 @@ import os
 import time
 import torch
 import torch.nn as nn
-import wandb
 import numpy as np
-from torch.cuda.amp import GradScaler
 from torch import autocast                   # imported from torch instead of torch.cuda.amp
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR, LinearLR, SequentialLR
 )
 from sklearn.metrics import f1_score, accuracy_score
-
-from src.dataset       import get_splits
-from src.model         import SkinFuseNetModel
-from src.loss          import FocalLoss
-
 
 # ── Config ────────────────────────────────────────────────────────────────────
 CONFIG = {
@@ -40,8 +33,11 @@ CONFIG = {
     "bert_unfreeze_epoch": 5,   # unfreeze BERT backbone after this epoch
 
     # Training
-    "batch_size":    32,
+    "batch_size":    2,
     "epochs":        100,
+    "max_train_batches": None,
+    "max_eval_batches":  None,
+    "resume":        True,
     "lr":            1e-4,
     "weight_decay":  1e-2,       # paper: 1e-2  (original code had 1e-4 — corrected)
     "warmup_epochs": 10,         # linear LR warmup before cosine annealing
@@ -60,13 +56,14 @@ CONFIG = {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def set_seed(seed: int):
-    torch.manual_seed(seed)
+    torch.random.default_generator.manual_seed(seed)
     np.random.seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
 
 
-def save_checkpoint(path, model, optimizer, scheduler, epoch, best_f1, config):
+def save_checkpoint(
+    path, model, optimizer, scheduler, scaler, epoch, best_f1,
+    patience_counter, config
+):
     """
     Saves full training state so training can be resumed from a checkpoint.
     Saves:
@@ -78,22 +75,31 @@ def save_checkpoint(path, model, optimizer, scheduler, epoch, best_f1, config):
         "model_state":     model.state_dict(),
         "optimizer_state": optimizer.state_dict(),
         "scheduler_state": scheduler.state_dict(),
+        "scaler_state":    scaler.state_dict(),
         "best_f1":         best_f1,
+        "patience_counter": patience_counter,
         "config":          config,
     }, path)
 
 
-def load_checkpoint(path, model, optimizer, scheduler):
-    """Load full training state from a checkpoint file. Returns (epoch, best_f1)."""
+def load_checkpoint(path, model, optimizer, scheduler, scaler):
+    """Load full training state and return epoch, best F1, and patience."""
     ckpt      = torch.load(path, map_location="cpu")
     model.load_state_dict(ckpt["model_state"])
     optimizer.load_state_dict(ckpt["optimizer_state"])
     scheduler.load_state_dict(ckpt["scheduler_state"])
-    return ckpt["epoch"], ckpt["best_f1"]
+    if "scaler_state" in ckpt:
+        scaler.load_state_dict(ckpt["scaler_state"])
+    return (
+        ckpt["epoch"],
+        ckpt["best_f1"],
+        ckpt.get("patience_counter", 0),
+        ckpt.get("config", {}),
+    )
 
 
 # ── Training ──────────────────────────────────────────────────────────────────
-def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
+def train_one_epoch(model, loader, optimizer, criterion, scaler, device, max_batches=None):
     """
     Runs one full training epoch.
     Returns: dict with 'loss', 'accuracy', 'macro_f1'
@@ -103,7 +109,10 @@ def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
     all_preds  = []
     all_labels = []
 
-    for batch in loader:
+    processed_batches = 0
+    for batch_index, batch in enumerate(loader):
+        if max_batches is not None and batch_index >= max_batches:
+            break
         image          = batch["image"].to(device, non_blocking=True)
         input_ids      = batch["input_ids"].to(device, non_blocking=True)
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
@@ -113,7 +122,7 @@ def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
 
         # autocast requires device_type in PyTorch 2.x
         # torch.cuda.amp.autocast() with no args is deprecated — use this form
-        with autocast(device_type="cuda"):
+        with autocast(device_type=device.type, enabled=device.type == "cuda"):
             logits = model(image, input_ids, attention_mask)
             loss   = criterion(logits, labels)
 
@@ -125,8 +134,15 @@ def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
         preds       = logits.argmax(dim=1).cpu().numpy()
         all_preds.extend(preds)
         all_labels.extend(labels.cpu().numpy())
+        processed_batches += 1
 
-    n       = len(loader)
+        if (batch_index + 1) % 500 == 0:
+            print(
+                f"  Train batch {batch_index + 1}/{len(loader)}",
+                flush=True,
+            )
+
+    n       = max(1, processed_batches)
     acc     = accuracy_score(all_labels, all_preds)
     macro_f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
 
@@ -138,7 +154,7 @@ def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
 
 
 @torch.no_grad()
-def evaluate(model, loader, criterion, device):
+def evaluate(model, loader, criterion, device, max_batches=None):
     """
     Runs evaluation on val or test set.
     Returns: dict with 'loss', 'accuracy', 'macro_f1'
@@ -148,13 +164,16 @@ def evaluate(model, loader, criterion, device):
     all_preds  = []
     all_labels = []
 
-    for batch in loader:
+    processed_batches = 0
+    for batch_index, batch in enumerate(loader):
+        if max_batches is not None and batch_index >= max_batches:
+            break
         image          = batch["image"].to(device, non_blocking=True)
         input_ids      = batch["input_ids"].to(device, non_blocking=True)
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
         labels         = batch["label"].to(device, non_blocking=True)
 
-        with autocast(device_type="cuda"):
+        with autocast(device_type=device.type, enabled=device.type == "cuda"):
             logits = model(image, input_ids, attention_mask)
             loss   = criterion(logits, labels)
 
@@ -162,8 +181,15 @@ def evaluate(model, loader, criterion, device):
         preds       = logits.argmax(dim=1).cpu().numpy()
         all_preds.extend(preds)
         all_labels.extend(labels.cpu().numpy())
+        processed_batches += 1
 
-    n        = len(loader)
+        if (batch_index + 1) % 500 == 0:
+            print(
+                f"  Eval batch {batch_index + 1}/{len(loader)}",
+                flush=True,
+            )
+
+    n        = max(1, processed_batches)
     acc      = accuracy_score(all_labels, all_preds)
     macro_f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
 
@@ -177,12 +203,9 @@ def evaluate(model, loader, criterion, device):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     cfg    = CONFIG
-    set_seed(cfg["seed"])
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"\nDevice: {device}")
-    if device.type == "cuda":
-        print(f"GPU   : {torch.cuda.get_device_name(0)}\n")
+    from src.dataset import get_splits
+    from src.loss import FocalLoss
 
     # ── Data ──────────────────────────────────────────────────────────────────
     print("Loading data...")
@@ -193,8 +216,21 @@ def main():
         seed=cfg["seed"],
     )
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"\nDevice: {device}")
+    if device.type == "cuda":
+        print(f"GPU   : {torch.cuda.get_device_name(0)}\n")
+
+    set_seed(cfg["seed"])
+    if device.type == "cuda":
+        torch.cuda.manual_seed_all(cfg["seed"])
+
+    import wandb
+
     # ── Model ─────────────────────────────────────────────────────────────────
     print("Building model...")
+    from src.model import SkinFuseNetModel
+
     model = SkinFuseNetModel(
         num_classes=cfg["num_classes"],
         embed_dim=cfg["embed_dim"],
@@ -244,7 +280,10 @@ def main():
     )
 
     # ── Mixed precision scaler ────────────────────────────────────────────────
-    scaler = GradScaler()
+    scaler = torch.amp.GradScaler(
+        "cuda",
+        enabled=device.type == "cuda",
+    )
 
     # ── W&B ───────────────────────────────────────────────────────────────────
     wandb.init(
@@ -259,15 +298,42 @@ def main():
     best_ckpt_path = ckpt_dir / "best_model.pt"
     last_ckpt_path = ckpt_dir / "last_model.pt"
 
-    # ── Training loop ─────────────────────────────────────────────────────────
-    best_val_f1      = 0.0
+    start_epoch = 1
+    best_val_f1 = 0.0
     patience_counter = 0
+    if cfg["resume"] and last_ckpt_path.exists():
+        checkpoint_config = torch.load(
+            last_ckpt_path, map_location="cpu", weights_only=True
+        ).get("config", {})
+        is_smoke_checkpoint = (
+            checkpoint_config.get("max_train_batches") is not None
+            or checkpoint_config.get("max_eval_batches") is not None
+        )
+        if is_smoke_checkpoint:
+            print("Ignoring smoke-test checkpoint; starting full training from epoch 1.")
+        else:
+            (
+                completed_epoch,
+                best_val_f1,
+                patience_counter,
+                _,
+            ) = load_checkpoint(
+                last_ckpt_path, model, optimizer, scheduler, scaler
+            )
+            start_epoch = completed_epoch + 1
+            print(
+                f"Resuming from epoch {start_epoch} "
+                f"(last completed epoch: {completed_epoch})"
+            )
+            if start_epoch > cfg["bert_unfreeze_epoch"]:
+                model.unfreeze_bert()
 
+    # ── Training loop ─────────────────────────────────────────────────────────
     print(f"Starting training for up to {cfg['epochs']} epochs...\n")
     print(f"Early stopping patience : {cfg['early_stop_patience']} epochs")
     print(f"BERT unfreeze at epoch  : {cfg['bert_unfreeze_epoch']}\n")
 
-    for epoch in range(1, cfg["epochs"] + 1):
+    for epoch in range(start_epoch, cfg["epochs"] + 1):
         t_start = time.time()
 
         # ── Unfreeze BERT after warmup ────────────────────────────────────────
@@ -276,11 +342,15 @@ def main():
 
         # ── Train ─────────────────────────────────────────────────────────────
         train_metrics = train_one_epoch(
-            model, train_loader, optimizer, criterion, scaler, device
+            model, train_loader, optimizer, criterion, scaler, device,
+            max_batches=cfg["max_train_batches"],
         )
 
         # ── Validate ──────────────────────────────────────────────────────────
-        val_metrics = evaluate(model, val_loader, criterion, device)
+        val_metrics = evaluate(
+            model, val_loader, criterion, device,
+            max_batches=cfg["max_eval_batches"],
+        )
 
         # ── Scheduler step ────────────────────────────────────────────────────
         scheduler.step()
@@ -309,7 +379,7 @@ def main():
         # ── Checkpoint — always save latest ───────────────────────────────────
         save_checkpoint(
             last_ckpt_path, model, optimizer, scheduler,
-            epoch, best_val_f1, cfg
+            scaler, epoch, best_val_f1, patience_counter, cfg
         )
 
         # ── Checkpoint — save best ────────────────────────────────────────────
@@ -319,7 +389,7 @@ def main():
             patience_counter = 0
             save_checkpoint(
                 best_ckpt_path, model, optimizer, scheduler,
-                epoch, best_val_f1, cfg
+                scaler, epoch, best_val_f1, patience_counter, cfg
             )
             print(f"  ✅ New best val macro F1: {best_val_f1:.4f} — checkpoint saved.")
         else:
@@ -337,7 +407,10 @@ def main():
     best_ckpt = torch.load(best_ckpt_path, map_location=device)
     model.load_state_dict(best_ckpt["model_state"])
 
-    test_metrics = evaluate(model, test_loader, criterion, device)
+    test_metrics = evaluate(
+        model, test_loader, criterion, device,
+        max_batches=cfg["max_eval_batches"],
+    )
     print("\n" + "=" * 55)
     print("Test set results (best model checkpoint):")
     print(f"  Loss     : {test_metrics['loss']:.4f}")

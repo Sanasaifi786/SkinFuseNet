@@ -114,7 +114,9 @@ def get_splits(
     img_dir = Path(img_dir)
 
     # ── Step 1: Load and clean CSV ────────────────────────────────────────────
-    df = pd.read_csv(csv_path)
+    # The default pandas parser crashes natively in the current Windows/pandas
+    # environment; the Python engine handles this metadata file reliably.
+    df = pd.read_csv(csv_path, engine='python')
     df.dropna(subset=['image_id', 'dx'], inplace=True)
     df['dx'] = df['dx'].str.lower().str.strip()
 
@@ -182,15 +184,15 @@ def get_splits(
     # num_workers=0 is mandatory on Windows — multiprocessing DataLoader crashes otherwise
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size,
-        shuffle=True,  num_workers=0, pin_memory=True
+        shuffle=True,  num_workers=0, pin_memory=False
     )
     val_loader = DataLoader(
         val_dataset, batch_size=batch_size,
-        shuffle=False, num_workers=0, pin_memory=True
+        shuffle=False, num_workers=0, pin_memory=False
     )
     test_loader = DataLoader(
         test_dataset, batch_size=batch_size,
-        shuffle=False, num_workers=0, pin_memory=True
+        shuffle=False, num_workers=0, pin_memory=False
     )
 
     return train_loader, val_loader, test_loader
