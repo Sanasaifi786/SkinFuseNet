@@ -1,9 +1,15 @@
 import os
 import pandas as pd
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 
+# Anchor to ml/ directory so this works from any CWD
+_ml_dir = Path(__file__).resolve().parents[1]
 
-def verify_splits(csv_path="ml/data/raw/HAM10000_metadata.csv"):
+
+def verify_splits(csv_path=None):
+    if csv_path is None:
+        csv_path = str(_ml_dir / "data" / "raw" / "HAM10000_metadata.csv")
     """
     Verifies that the dataset split produces a reproducible 70/20/10 stratified split
     preserving class proportions within +-2% tolerance across all subsets.
@@ -111,8 +117,8 @@ def verify_splits(csv_path="ml/data/raw/HAM10000_metadata.csv"):
     print("Reproducibility: " + ("PASS (Identical splits)" if reproducible else "FAIL (Splits differ)"))
 
     # 7. Write Results Markdown to team/split_verification_results.md
-    os.makedirs("team", exist_ok=True)
-    report_path = "team/split_verification_results.md"
+    os.makedirs(str(_ml_dir / "team"), exist_ok=True)
+    report_path = str(_ml_dir / "team" / "split_verification_results.md")
     with open(report_path, "w", encoding="utf-8") as f:
 
         f.write("# SkinFuseNet — Stratified Split Verification Report\n\n")

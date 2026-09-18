@@ -2,150 +2,234 @@ import os
 import torch
 import pandas as pd
 import numpy as np
-import cv2
 from pathlib import Path
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+from sklearn.model_selection import train_test_split
 
 from src.preprocess.image_utils import load_and_preprocess_image
-
-# Import Person B's Tokenizer
 from src.branches.bert import MetadataTokenizer
 
-# Standard HAM10000 mapping
+# ── Label mapping (HAM10000 standard) ────────────────────────────────────────
 CLASS_MAP = {
     'akiec': 0,
-    'bcc': 1,
-    'bkl': 2,
-    'df': 3,
-    'mel': 4,
-    'nv': 5,
-    'vasc': 6
+    'bcc':   1,
+    'bkl':   2,
+    'df':    3,
+    'mel':   4,
+    'nv':    5,
+    'vasc':  6
 }
 
+IDX_TO_CLASS = {v: k.upper() for k, v in CLASS_MAP.items()}
+
+
+# ── Dataset class ─────────────────────────────────────────────────────────────
 class SkinLesionDataset(Dataset):
-    def __init__(self, csv_path, img_dir, is_train=True, transform=None):
+    """
+    PyTorch Dataset for HAM10000 skin lesion classification.
+
+    Each sample returns:
+        image          : FloatTensor [3, 256, 256]  — normalised lesion image
+        input_ids      : LongTensor  [128]          — BERT token IDs
+        attention_mask : LongTensor  [128]          — BERT attention mask
+        label          : LongTensor  scalar         — class index 0-6
+    """
+
+    def __init__(self, dataframe, img_dir, transform=None):
         """
         Args:
-            csv_path (str): Path to HAM10000 metadata CSV.
-            img_dir (str): Path to the processed images directory (e.g., CLAHE outputs).
-            is_train (bool): True for training set (applies augmentation if provided).
-            transform: torchvision transforms.
+            dataframe  : pandas DataFrame already filtered and split externally.
+            img_dir    : path to the processed/CLAHE images folder.
+            transform  : torchvision transforms to apply to each image.
         """
-        self.img_dir = Path(img_dir)
+        self.df        = dataframe.reset_index(drop=True)
+        self.img_dir   = Path(img_dir)
         self.transform = transform
-        self.is_train = is_train
-        
-        # Load metadata
-        self.df = pd.read_csv(csv_path)
-        
-        # Clean and impute missing data
-        self._clean_data()
-        
-        # Initialize Tokenizer
+
+        # Tokenizer loaded once per dataset — NOT inside __getitem__
         self.tokenizer = MetadataTokenizer()
-        
-    def _clean_data(self):
-        # Drop rows with missing essential image_id or dx
-        self.df.dropna(subset=['image_id', 'dx'], inplace=True)
-        
-        # Aggressively filter missing physical images
-        valid_rows = []
-        for _, row in self.df.iterrows():
-            img_path = self.img_dir / f"{row['image_id']}.jpg"
-            if img_path.exists():
-                valid_rows.append(True)
-            else:
-                valid_rows.append(False)
-        self.df = self.df[valid_rows].reset_index(drop=True)
-        
-        # Impute age: fill missing with median age
-        median_age = self.df['age'].median()
-        self.df['age'] = self.df['age'].fillna(median_age)
-        
-        # Impute sex and localization with 'unknown'
-        self.df['sex'] = self.df['sex'].fillna('unknown')
-        self.df['localization'] = self.df['localization'].fillna('unknown')
-        
+
+        # Print summary so you know what loaded
+        print(f"  Dataset ready: {len(self.df)} samples")
+
     def __len__(self):
         return len(self.df)
-        
+
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
-        
-        # 1. Image Loading & Preprocessing (Shared logic)
-        img_name = f"{row['image_id']}.jpg"
-        img_path = self.img_dir / img_name
-        
-        image = load_and_preprocess_image(img_path, self.transform)
-            
-        # 2. Metadata Tokenization
-        age = int(row['age'])
-        sex = str(row['sex']).lower()
-        localization = str(row['localization']).lower()
-        
-        tokens = self.tokenizer.tokenize(age, sex, localization)
-        input_ids = tokens['input_ids'].squeeze(0) # Remove batch dim
-        attention_mask = tokens['attention_mask'].squeeze(0)
-        
-        # 3. Label
-        label_str = str(row['dx']).lower()
-        label = CLASS_MAP.get(label_str, 5) # Default to NV (most common) if somehow invalid
-        
+
+        # ── 1. Image ──────────────────────────────────────────────────────────
+        img_path = self.img_dir / f"{row['image_id']}.jpg"
+        image    = load_and_preprocess_image(img_path, self.transform)
+
+        # ── 2. Metadata tokenisation ──────────────────────────────────────────
+        age          = int(row['age'])
+        sex          = str(row['sex']).lower().strip()
+        localization = str(row['localization']).lower().strip()
+
+        tokens         = self.tokenizer.tokenize(age, sex, localization)
+        input_ids      = tokens['input_ids'].squeeze(0)       # [128]
+        attention_mask = tokens['attention_mask'].squeeze(0)  # [128]
+
+        # ── 3. Label ──────────────────────────────────────────────────────────
+        label_str = str(row['dx']).lower().strip()
+        if label_str not in CLASS_MAP:
+            raise ValueError(
+                f"Unknown class '{label_str}' at index {idx} "
+                f"(image_id={row['image_id']}). "
+                f"Valid classes: {list(CLASS_MAP.keys())}"
+            )
+        label = CLASS_MAP[label_str]
+
         return {
-            'image': image,
-            'input_ids': input_ids,
+            'image':          image,
+            'input_ids':      input_ids,
             'attention_mask': attention_mask,
-            'label': torch.tensor(label, dtype=torch.long)
+            'label':          torch.tensor(label, dtype=torch.long),
         }
 
-def get_splits(csv_path, img_dir, batch_size=32, seed=42):
+
+# ── Data loading utility ──────────────────────────────────────────────────────
+def get_splits(
+    csv_path,
+    img_dir,
+    batch_size=32,
+    seed=42,
+):
     """
-    Utility function to create train/val/test data loaders with a reproducible split.
-    Uses an 70/15/15 split.
+    Reads HAM10000 CSV, filters to images that exist on disk,
+    splits 70% train / 20% val / 10% test (stratified by class),
+    and returns three DataLoaders.
+
+    Args:
+        csv_path   : path to HAM10000_metadata.csv
+        img_dir    : path to processed image folder
+        batch_size : images per batch
+        seed       : random seed for reproducibility
+
+    Returns:
+        train_loader, val_loader, test_loader
     """
-    from sklearn.model_selection import train_test_split
-    from torch.utils.data import DataLoader
-    
-    # Read full CSV
+    img_dir = Path(img_dir)
+
+    # ── Step 1: Load and clean CSV ────────────────────────────────────────────
     df = pd.read_csv(csv_path)
     df.dropna(subset=['image_id', 'dx'], inplace=True)
-    
-    # 70% Train, 30% Temp
-    train_df, temp_df = train_test_split(df, test_size=0.3, random_state=seed, stratify=df['dx'])
-    # 15% Val, 15% Test
-    val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=seed, stratify=temp_df['dx'])
-    
-    # Save temporary CSVs for the Dataset class to use
-    os.makedirs('data/temp_splits', exist_ok=True)
-    train_csv = 'data/temp_splits/train.csv'
-    val_csv = 'data/temp_splits/val.csv'
-    test_csv = 'data/temp_splits/test.csv'
-    
-    train_df.to_csv(train_csv, index=False)
-    val_df.to_csv(val_csv, index=False)
-    test_df.to_csv(test_csv, index=False)
-    
-    # Base transforms
+    df['dx'] = df['dx'].str.lower().str.strip()
+
+    # ── Step 2: Filter rows whose image file actually exists ──────────────────
+    # Vectorised — much faster than iterrows() on 10,015 rows
+    before = len(df)
+    df = df[df['image_id'].apply(
+        lambda x: (img_dir / f"{x}.jpg").exists()
+    )].reset_index(drop=True)
+    after = len(df)
+    if before != after:
+        print(f"  ⚠️  Dropped {before - after} rows with missing images "
+              f"({after}/{before} images found on disk).")
+
+    # ── Step 3: Impute missing metadata ──────────────────────────────────────
+    median_age        = df['age'].median()
+    df['age']         = df['age'].fillna(median_age)
+    df['sex']         = df['sex'].fillna('unknown')
+    df['localization'] = df['localization'].fillna('unknown')
+
+    # ── Step 4: Stratified split — 70 / 20 / 10 ─────────────────────────────
+    # First cut: 90% trainval, 10% test
+    df_trainval, df_test = train_test_split(
+        df, test_size=0.10,
+        stratify=df['dx'], random_state=seed
+    )
+    # Second cut: from trainval — 77.8% train (= 70% of total), 22.2% val (= 20% of total)
+    df_train, df_val = train_test_split(
+        df_trainval, test_size=0.222,
+        stratify=df_trainval['dx'], random_state=seed
+    )
+
+    print(f"\nDataset split (seed={seed}):")
+    print(f"  Train : {len(df_train):5d} samples")
+    print(f"  Val   : {len(df_val):5d} samples")
+    print(f"  Test  : {len(df_test):5d} samples")
+    print(f"  Total : {len(df):5d} samples\n")
+
+    # ── Step 5: Transforms ────────────────────────────────────────────────────
+    # ToPILImage() in BOTH train and val — load_and_preprocess_image returns numpy
     train_transform = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225]),
     ])
-    
+
     val_transform = transforms.Compose([
+        transforms.ToPILImage(),   # ← was missing — caused val/test crash
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225]),
     ])
-    
-    train_dataset = SkinLesionDataset(train_csv, img_dir, is_train=True, transform=train_transform)
-    val_dataset = SkinLesionDataset(val_csv, img_dir, is_train=False, transform=val_transform)
-    test_dataset = SkinLesionDataset(test_csv, img_dir, is_train=False, transform=val_transform)
-    
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
-    
+
+    # ── Step 6: Create Dataset objects ───────────────────────────────────────
+    print("Building datasets...")
+    train_dataset = SkinLesionDataset(df_train, img_dir, transform=train_transform)
+    val_dataset   = SkinLesionDataset(df_val,   img_dir, transform=val_transform)
+    test_dataset  = SkinLesionDataset(df_test,  img_dir, transform=val_transform)
+
+    # ── Step 7: DataLoaders ───────────────────────────────────────────────────
+    # num_workers=0 is mandatory on Windows — multiprocessing DataLoader crashes otherwise
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size,
+        shuffle=True,  num_workers=0, pin_memory=True
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size,
+        shuffle=False, num_workers=0, pin_memory=True
+    )
+    test_loader = DataLoader(
+        test_dataset, batch_size=batch_size,
+        shuffle=False, num_workers=0, pin_memory=True
+    )
+
     return train_loader, val_loader, test_loader
+
+
+# ── Quick verification ────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    import sys
+
+    # Anchor to ml/ directory so this works from any CWD
+    _ml_dir = Path(__file__).resolve().parents[1]
+    CSV_PATH = str(_ml_dir / "data" / "raw" / "HAM10000_metadata.csv")
+    IMG_DIR  = str(_ml_dir / "data" / "processed")
+
+    print("=" * 55)
+    print("Running dataset.py verification...")
+    print("=" * 55)
+
+    train_loader, val_loader, test_loader = get_splits(
+        CSV_PATH, IMG_DIR, batch_size=4
+    )
+
+    batch = next(iter(train_loader))
+
+    print("\nBatch shape verification:")
+    print(f"  image shape         : {batch['image'].shape}")          # [4, 3, H, W]
+    print(f"  input_ids shape     : {batch['input_ids'].shape}")      # [4, 128]
+    print(f"  attention_mask shape: {batch['attention_mask'].shape}") # [4, 128]
+    print(f"  label shape         : {batch['label'].shape}")          # [4]
+
+    print("\nDtype check:")
+    print(f"  image dtype         : {batch['image'].dtype}")          # float32
+    print(f"  input_ids dtype     : {batch['input_ids'].dtype}")      # int64
+    print(f"  label dtype         : {batch['label'].dtype}")          # int64
+
+    print("\nValue range check:")
+    print(f"  image min           : {batch['image'].min():.3f}")      # approx -2.5
+    print(f"  image max           : {batch['image'].max():.3f}")      # approx  2.5
+    print(f"  label values        : {batch['label'].tolist()}")       # 0-6
+    print(f"  class names         : {[IDX_TO_CLASS[l.item()] for l in batch['label']]}")
+
+    print("\n✅ dataset.py verification complete.")

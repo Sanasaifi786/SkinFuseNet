@@ -43,7 +43,6 @@ The following files exist in the repository structure but are currently 0-byte p
 
 - `ml/src/fusion.py` (0 bytes)
 - `ml/src/loss.py` (0 bytes)
-- `ml/src/model.py` (0 bytes)
 - `ml/src/evaluate.py` (0 bytes)
 - `ml/src/export.py` (0 bytes)
 - `ml/src/gradcam.py` (0 bytes)
@@ -161,8 +160,8 @@ The following files exist in the repository structure but are currently 0-byte p
    - [x] ~~Extract `[CLS]` token representation and project to shared embedding dimension ($d=512$) with freezing/unfreezing strategy.~~
 4. **Week 6 (Loss & Model Assembly):**
    - [x] ~~Implement `ml/src/loss.py` with Class-Balanced Multi-Class Focal Loss and Label Smoothing.~~
-   - [ ] Implement `ml/src/model.py` (`SkinFuseNetModel`) combining CNN, ViT, BERT, and Cross-Attention Fusion into a unified forward pass returning 7 logits.
-   - [ ] Validate gradient backpropagation through all branches.
+   - [x] ~~Implement `ml/src/model.py` (`SkinFuseNetModel`) combining CNN, ViT, BERT, and Cross-Attention Fusion into a unified forward pass returning 7 logits.~~
+   - [x] ~~Validate gradient backpropagation through all branches.~~
 5. **Week 7 (Model Export):**
    - [ ] Implement `ml/src/export.py` to save production checkpoint / TorchScript artifact into `backend/models/`.
    - [ ] Write `team/model_export_guide.md` detailing weights loading and signature verification.
@@ -233,7 +232,7 @@ flowchart TD
             B2["Person B\nVision Transformer branch\nSwin V2 + 512-d projection\nvit.py - COMPLETED"]:::completed
             C3["Person C\nBERT metadata encoder\nCLS embedding + 512-d projection\nbert.py - COMPLETED"]:::completed
             B3["Person B/C\nCross-attention fusion\nVisual features + metadata\nfusion.py - COMPLETED"]:::completed
-            C4["Person C\nUnified multimodal model\n7-class logits\nmodel.py - PENDING"]:::pending
+            C4["Person C\nUnified multimodal model\n7-class logits\nmodel.py - COMPLETED"]:::completed
             C5["Person C\nClass-balanced focal loss\n+ label smoothing\nloss.py - COMPLETED"]:::completed
 
             A2 -->|"Images [B,3,256,256]"| A3
@@ -388,11 +387,9 @@ flowchart TD
 * **Person C**: Cross-Attention Fusion implemented and Focal Loss integrated.
 
 ## 🎯 Next Team Session (Recommended Plan)
-1. **Person C**: Write `model.py` integrating the 3 branches and fusion layer.
-2. **Person C**: Verify the forward pass of `model.py` returns `[B, 7]`.
-3. **Person A**: Swap the mock model in `train.py` with `model.py` and run a 1-epoch test.
-4. **Person B**: Write the `inference.py` stub to prepare for the model weights.
-5. **Team**: Verify everything merges correctly to `main`.
+1. **Person A**: Swap the mock model in `train.py` with `model.py` and run a 1-epoch test.
+2. **Person B**: Write the `inference.py` stub to prepare for the model weights.
+3. **Team**: Verify everything merges correctly to `main`.
 
 ---
 
@@ -422,6 +419,6 @@ Whenever a developer:
 
 
 ### Action Items for Today:
-1. **Person A:** You have completed data preparation and model foundations. The `verify_splits.py` task was already completed by Person C. Your remaining verification tasks are: Validate the combined SAM+CLAHE output, and test the data augmentations on sample images. After that, you can work on Frontend/Backend tasks while waiting for Person C to finish `model.py` and unblock training.
+1. **Person A:** You have completed data preparation and model foundations. The `verify_splits.py` task was already completed by Person C. Your remaining verification tasks are: Validate the combined SAM+CLAHE output, and test the data augmentations on sample images. After that, swap `model.py` into `train.py` and kick off the GPU training loop since you are now unblocked!
 2. **Person B:** Your Week 3 CLAHE task was successfully merged into Person A's `sam_preprocess.py`. Test the BERT tokenization batching (Week 4), and then proceed with Week 6 Cross-Attention `fusion.py`.
-3. **Person C:** You have completed `bert.py`, `loss.py`, and the split verification tasks! Next up: draft `ml/src/model.py` to assemble the full model architecture.
+3. **Person C:** You have completed `bert.py`, `loss.py`, split verification, and the `model.py` assembly! Next up: write `export.py` for Person A to run, and then pivot to Frontend visual components.

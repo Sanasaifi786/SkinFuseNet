@@ -1,164 +1,359 @@
+import sys
+from pathlib import Path
+
+# ── sys.path fix MUST come before any src.* imports ──────────────────────────
+ml_dir = Path(__file__).resolve().parents[1]
+if str(ml_dir) not in sys.path:
+    sys.path.insert(0, str(ml_dir))
+
 import os
+import time
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.cuda.amp import autocast, GradScaler
-from tqdm import tqdm
-from pathlib import Path
-from sklearn.metrics import accuracy_score, f1_score
+import wandb
+import numpy as np
+from torch.cuda.amp import GradScaler
+from torch import autocast                   # imported from torch instead of torch.cuda.amp
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import (
+    CosineAnnealingLR, LinearLR, SequentialLR
+)
+from sklearn.metrics import f1_score, accuracy_score
 
-# Imports from our modules
-from src.dataset import get_splits
-from src.branches.cnn import EfficientNetV2Branch
+from src.dataset       import get_splits
+from src.model         import SkinFuseNetModel
+from src.loss          import FocalLoss
 
-# Note: Once Person C implements `SkinFuseNetModel` and `FocalLoss`, we will import them here.
-# from src.model import SkinFuseNetModel
-# from src.loss import FocalLoss
 
-class MockSkinFuseNetModel(nn.Module):
+# ── Config ────────────────────────────────────────────────────────────────────
+CONFIG = {
+    # Paths — anchored to ml/ directory so script works from any CWD
+    "csv_path":      str(ml_dir / "data" / "raw" / "HAM10000_metadata.csv"),
+    "img_dir":       str(ml_dir / "data" / "processed"),
+    "checkpoint_dir": str(ml_dir / "checkpoints"),
+
+    # Model
+    "num_classes":   7,
+    "embed_dim":     512,
+    "pretrained":    True,
+    "freeze_bert":   True,
+    "bert_unfreeze_epoch": 5,   # unfreeze BERT backbone after this epoch
+
+    # Training
+    "batch_size":    32,
+    "epochs":        100,
+    "lr":            1e-4,
+    "weight_decay":  1e-2,       # paper: 1e-2  (original code had 1e-4 — corrected)
+    "warmup_epochs": 10,         # linear LR warmup before cosine annealing
+    "early_stop_patience": 15,   # stop if val macro F1 does not improve for 15 epochs
+
+    # Loss
+    "focal_gamma":        2.0,
+    "label_smoothing":    0.1,
+
+    # Misc
+    "seed":          42,
+    "wandb_project": "skinfusenet",
+    "wandb_run":     "run_v1",
+}
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def set_seed(seed: int):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def save_checkpoint(path, model, optimizer, scheduler, epoch, best_f1, config):
     """
-    A temporary mock model using ONLY the CNN branch to allow Person A to test the pipeline 
-    before Person B and C finish the ViT, BERT, and Fusion layers.
+    Saves full training state so training can be resumed from a checkpoint.
+    Saves:
+        model weights, optimizer state, scheduler state,
+        epoch number, best val F1, and config dict.
     """
-    def __init__(self, num_classes=7):
-        super().__init__()
-        self.cnn = EfficientNetV2Branch(embed_dim=512)
-        # Directly project CNN embedding to classes for testing
-        self.classifier = nn.Linear(512, num_classes)
-        
-    def forward(self, image, input_ids=None, attention_mask=None):
-        # Ignore text inputs for this mock
-        features = self.cnn(image)
-        return self.classifier(features)
+    torch.save({
+        "epoch":           epoch,
+        "model_state":     model.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+        "scheduler_state": scheduler.state_dict(),
+        "best_f1":         best_f1,
+        "config":          config,
+    }, path)
 
-def train_one_epoch(model, dataloader, optimizer, criterion, scaler, device):
+
+def load_checkpoint(path, model, optimizer, scheduler):
+    """Load full training state from a checkpoint file. Returns (epoch, best_f1)."""
+    ckpt      = torch.load(path, map_location="cpu")
+    model.load_state_dict(ckpt["model_state"])
+    optimizer.load_state_dict(ckpt["optimizer_state"])
+    scheduler.load_state_dict(ckpt["scheduler_state"])
+    return ckpt["epoch"], ckpt["best_f1"]
+
+
+# ── Training ──────────────────────────────────────────────────────────────────
+def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
+    """
+    Runs one full training epoch.
+    Returns: dict with 'loss', 'accuracy', 'macro_f1'
+    """
     model.train()
-    running_loss = 0.0
-    all_preds = []
+    total_loss = 0.0
+    all_preds  = []
     all_labels = []
-    
-    progress_bar = tqdm(dataloader, desc="Training")
-    
-    for batch in progress_bar:
-        images = batch['image'].to(device)
-        input_ids = batch['input_ids'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        labels = batch['label'].to(device)
-        
+
+    for batch in loader:
+        image          = batch["image"].to(device, non_blocking=True)
+        input_ids      = batch["input_ids"].to(device, non_blocking=True)
+        attention_mask = batch["attention_mask"].to(device, non_blocking=True)
+        labels         = batch["label"].to(device, non_blocking=True)
+
         optimizer.zero_grad()
-        
-        # Mixed Precision Forward pass
-        with autocast():
-            # In final version: outputs = model(images, input_ids, attention_mask)
-            outputs = model(images, input_ids, attention_mask)
-            loss = criterion(outputs, labels)
-            
-        # Mixed Precision Backward pass
+
+        # autocast requires device_type in PyTorch 2.x
+        # torch.cuda.amp.autocast() with no args is deprecated — use this form
+        with autocast(device_type="cuda"):
+            logits = model(image, input_ids, attention_mask)
+            loss   = criterion(logits, labels)
+
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
-        
-        running_loss += loss.item()
-        
-        # Metrics
-        preds = torch.argmax(outputs, dim=1)
-        all_preds.extend(preds.cpu().numpy())
+
+        total_loss += loss.item()
+        preds       = logits.argmax(dim=1).cpu().numpy()
+        all_preds.extend(preds)
         all_labels.extend(labels.cpu().numpy())
-        
-        progress_bar.set_postfix({'loss': loss.item()})
-        
-    epoch_loss = running_loss / len(dataloader)
-    epoch_acc = accuracy_score(all_labels, all_preds)
-    epoch_f1 = f1_score(all_labels, all_preds, average='macro')
-    
-    return epoch_loss, epoch_acc, epoch_f1
 
-def validate(model, dataloader, criterion, device):
+    n       = len(loader)
+    acc     = accuracy_score(all_labels, all_preds)
+    macro_f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
+
+    return {
+        "loss":      total_loss / n,
+        "accuracy":  acc,
+        "macro_f1":  macro_f1,
+    }
+
+
+@torch.no_grad()
+def evaluate(model, loader, criterion, device):
+    """
+    Runs evaluation on val or test set.
+    Returns: dict with 'loss', 'accuracy', 'macro_f1'
+    """
     model.eval()
-    running_loss = 0.0
-    all_preds = []
+    total_loss = 0.0
+    all_preds  = []
     all_labels = []
-    
-    with torch.no_grad():
-        for batch in tqdm(dataloader, desc="Validation"):
-            images = batch['image'].to(device)
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
-            labels = batch['label'].to(device)
-            
-            with autocast():
-                outputs = model(images, input_ids, attention_mask)
-                loss = criterion(outputs, labels)
-                
-            running_loss += loss.item()
-            preds = torch.argmax(outputs, dim=1)
-            all_preds.extend(preds.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
-            
-    epoch_loss = running_loss / len(dataloader)
-    epoch_acc = accuracy_score(all_labels, all_preds)
-    epoch_f1 = f1_score(all_labels, all_preds, average='macro')
-    
-    return epoch_loss, epoch_acc, epoch_f1
 
+    for batch in loader:
+        image          = batch["image"].to(device, non_blocking=True)
+        input_ids      = batch["input_ids"].to(device, non_blocking=True)
+        attention_mask = batch["attention_mask"].to(device, non_blocking=True)
+        labels         = batch["label"].to(device, non_blocking=True)
+
+        with autocast(device_type="cuda"):
+            logits = model(image, input_ids, attention_mask)
+            loss   = criterion(logits, labels)
+
+        total_loss += loss.item()
+        preds       = logits.argmax(dim=1).cpu().numpy()
+        all_preds.extend(preds)
+        all_labels.extend(labels.cpu().numpy())
+
+    n        = len(loader)
+    acc      = accuracy_score(all_labels, all_preds)
+    macro_f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
+
+    return {
+        "loss":      total_loss / n,
+        "accuracy":  acc,
+        "macro_f1":  macro_f1,
+    }
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Train SkinFuseNet")
-    parser.add_argument("--csv", type=str, default="data/raw/HAM10000_metadata.csv", help="Path to metadata CSV")
-    parser.add_argument("--img_dir", type=str, default="data/processed/clahe", help="Path to processed images")
-    parser.add_argument("--epochs", type=int, default=30)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--lr", type=float, default=1e-4)
-    args = parser.parse_args()
-    
-    # 1. Setup Device
+    cfg    = CONFIG
+    set_seed(cfg["seed"])
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-    
-    # 2. Setup DataLoaders
-    # Note: Requires the CSV file to exist!
-    print("Initializing DataLoaders...")
-    try:
-        train_loader, val_loader, test_loader = get_splits(args.csv, args.img_dir, batch_size=args.batch_size)
-    except FileNotFoundError as e:
-        print(f"Error loading dataset: {e}")
-        print(f"Make sure you have placed the HAM10000 metadata CSV at: {args.csv}")
-        return
-        
-    # 3. Setup Model
-    print("Initializing Model...")
-    model = MockSkinFuseNetModel(num_classes=7).to(device)
-    
-    # 4. Optimizer, Scheduler, Loss, Scaler
-    optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-    
-    # Fallback to standard CrossEntropy until Person C builds FocalLoss
-    criterion = nn.CrossEntropyLoss()
-    
+    print(f"\nDevice: {device}")
+    if device.type == "cuda":
+        print(f"GPU   : {torch.cuda.get_device_name(0)}\n")
+
+    # ── Data ──────────────────────────────────────────────────────────────────
+    print("Loading data...")
+    train_loader, val_loader, test_loader = get_splits(
+        csv_path=cfg["csv_path"],
+        img_dir=cfg["img_dir"],
+        batch_size=cfg["batch_size"],
+        seed=cfg["seed"],
+    )
+
+    # ── Model ─────────────────────────────────────────────────────────────────
+    print("Building model...")
+    model = SkinFuseNetModel(
+        num_classes=cfg["num_classes"],
+        embed_dim=cfg["embed_dim"],
+        pretrained=cfg["pretrained"],
+        freeze_bert=cfg["freeze_bert"],
+    ).to(device)
+
+    total     = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Parameters — total: {total:,}  trainable: {trainable:,}\n")
+
+    # ── Loss ──────────────────────────────────────────────────────────────────
+    criterion = FocalLoss(
+        gamma=cfg["focal_gamma"],
+        label_smoothing=cfg["label_smoothing"],
+        num_classes=cfg["num_classes"],
+    ).to(device)
+
+    # ── Optimiser ─────────────────────────────────────────────────────────────
+    optimizer = AdamW(
+        model.parameters(),
+        lr=cfg["lr"],
+        weight_decay=cfg["weight_decay"],   # paper: 1e-2
+    )
+
+    # ── Scheduler: linear warmup → cosine annealing ───────────────────────────
+    # Warmup: LR rises from lr/10 to lr over warmup_epochs
+    # After: cosine decay from lr to 0 over remaining epochs
+    warmup_epochs   = cfg["warmup_epochs"]
+    cosine_epochs   = cfg["epochs"] - warmup_epochs
+
+    warmup_scheduler = LinearLR(
+        optimizer,
+        start_factor=0.1,
+        end_factor=1.0,
+        total_iters=warmup_epochs,
+    )
+    cosine_scheduler = CosineAnnealingLR(
+        optimizer,
+        T_max=cosine_epochs,
+        eta_min=1e-6,
+    )
+    scheduler = SequentialLR(
+        optimizer,
+        schedulers=[warmup_scheduler, cosine_scheduler],
+        milestones=[warmup_epochs],
+    )
+
+    # ── Mixed precision scaler ────────────────────────────────────────────────
     scaler = GradScaler()
-    
-    # 5. Training Loop
-    os.makedirs('checkpoints', exist_ok=True)
-    best_val_f1 = 0.0
-    
-    for epoch in range(1, args.epochs + 1):
-        print(f"\nEpoch {epoch}/{args.epochs}")
-        
-        train_loss, train_acc, train_f1 = train_one_epoch(model, train_loader, optimizer, criterion, scaler, device)
-        val_loss, val_acc, val_f1 = validate(model, val_loader, criterion, device)
-        
+
+    # ── W&B ───────────────────────────────────────────────────────────────────
+    wandb.init(
+        project=cfg["wandb_project"],
+        name=cfg["wandb_run"],
+        config=cfg,
+    )
+
+    # ── Checkpoint dir ────────────────────────────────────────────────────────
+    ckpt_dir = Path(cfg["checkpoint_dir"])
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    best_ckpt_path = ckpt_dir / "best_model.pt"
+    last_ckpt_path = ckpt_dir / "last_model.pt"
+
+    # ── Training loop ─────────────────────────────────────────────────────────
+    best_val_f1      = 0.0
+    patience_counter = 0
+
+    print(f"Starting training for up to {cfg['epochs']} epochs...\n")
+    print(f"Early stopping patience : {cfg['early_stop_patience']} epochs")
+    print(f"BERT unfreeze at epoch  : {cfg['bert_unfreeze_epoch']}\n")
+
+    for epoch in range(1, cfg["epochs"] + 1):
+        t_start = time.time()
+
+        # ── Unfreeze BERT after warmup ────────────────────────────────────────
+        if epoch == cfg["bert_unfreeze_epoch"]:
+            model.unfreeze_bert()
+
+        # ── Train ─────────────────────────────────────────────────────────────
+        train_metrics = train_one_epoch(
+            model, train_loader, optimizer, criterion, scaler, device
+        )
+
+        # ── Validate ──────────────────────────────────────────────────────────
+        val_metrics = evaluate(model, val_loader, criterion, device)
+
+        # ── Scheduler step ────────────────────────────────────────────────────
         scheduler.step()
-        
-        print(f"Train - Loss: {train_loss:.4f} | Acc: {train_acc:.4f} | F1: {train_f1:.4f}")
-        print(f"Val   - Loss: {val_loss:.4f} | Acc: {val_acc:.4f} | F1: {val_f1:.4f}")
-        
-        # Save Best Checkpoint
+        current_lr = scheduler.get_last_lr()[0]
+
+        # ── Log to W&B ────────────────────────────────────────────────────────
+        wandb.log({
+            "epoch":           epoch,
+            "train/loss":      train_metrics["loss"],
+            "train/accuracy":  train_metrics["accuracy"],
+            "train/macro_f1":  train_metrics["macro_f1"],
+            "val/loss":        val_metrics["loss"],
+            "val/accuracy":    val_metrics["accuracy"],
+            "val/macro_f1":    val_metrics["macro_f1"],
+            "lr":              current_lr,
+        })
+
+        elapsed = time.time() - t_start
+        print(
+            f"Epoch {epoch:3d}/{cfg['epochs']}  "
+            f"| Train loss={train_metrics['loss']:.4f}  F1={train_metrics['macro_f1']:.4f}  "
+            f"| Val   loss={val_metrics['loss']:.4f}  F1={val_metrics['macro_f1']:.4f}  "
+            f"| LR={current_lr:.2e}  | {elapsed:.1f}s"
+        )
+
+        # ── Checkpoint — always save latest ───────────────────────────────────
+        save_checkpoint(
+            last_ckpt_path, model, optimizer, scheduler,
+            epoch, best_val_f1, cfg
+        )
+
+        # ── Checkpoint — save best ────────────────────────────────────────────
+        val_f1 = val_metrics["macro_f1"]
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
-            checkpoint_path = f"checkpoints/best_model.pth"
-            torch.save(model.state_dict(), checkpoint_path)
-            print(f"🌟 Saved new best model with Val F1: {best_val_f1:.4f}")
+            patience_counter = 0
+            save_checkpoint(
+                best_ckpt_path, model, optimizer, scheduler,
+                epoch, best_val_f1, cfg
+            )
+            print(f"  ✅ New best val macro F1: {best_val_f1:.4f} — checkpoint saved.")
+        else:
+            patience_counter += 1
+            print(f"  ⏳ No improvement. Patience: {patience_counter}/{cfg['early_stop_patience']}")
+
+        # ── Early stopping ────────────────────────────────────────────────────
+        if patience_counter >= cfg["early_stop_patience"]:
+            print(f"\n⛔ Early stopping triggered at epoch {epoch}.")
+            print(f"   Best val macro F1: {best_val_f1:.4f}")
+            break
+
+    # ── Final test evaluation ─────────────────────────────────────────────────
+    print("\nLoading best checkpoint for test evaluation...")
+    best_ckpt = torch.load(best_ckpt_path, map_location=device)
+    model.load_state_dict(best_ckpt["model_state"])
+
+    test_metrics = evaluate(model, test_loader, criterion, device)
+    print("\n" + "=" * 55)
+    print("Test set results (best model checkpoint):")
+    print(f"  Loss     : {test_metrics['loss']:.4f}")
+    print(f"  Accuracy : {test_metrics['accuracy'] * 100:.2f}%")
+    print(f"  Macro F1 : {test_metrics['macro_f1']:.4f}")
+    print("=" * 55)
+
+    wandb.log({
+        "test/loss":     test_metrics["loss"],
+        "test/accuracy": test_metrics["accuracy"],
+        "test/macro_f1": test_metrics["macro_f1"],
+    })
+    wandb.finish()
+
+    print(f"\nDone. Best checkpoint saved at: {best_ckpt_path}")
+
 
 if __name__ == "__main__":
     main()
