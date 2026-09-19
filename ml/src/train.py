@@ -23,22 +23,23 @@ CONFIG = {
     # Paths — anchored to ml/ directory so script works from any CWD
     "csv_path":      str(ml_dir / "data" / "raw" / "HAM10000_metadata.csv"),
     "img_dir":       str(ml_dir / "data" / "processed"),
-    "checkpoint_dir": str(ml_dir / "checkpoints"),
+    "checkpoint_dir": str(ml_dir / "checkpoints_v2_batch2_accumulated"),
 
     # Model
     "num_classes":   7,
     "embed_dim":     512,
     "pretrained":    True,
     "freeze_bert":   True,
-    "bert_unfreeze_epoch": 5,   # unfreeze BERT backbone after this epoch
+    "bert_unfreeze_epoch": 20,  # delay BERT fine-tuning until image branches stabilize
 
     # Training
     "batch_size":    2,
+    "gradient_accumulation_steps": 4,
     "epochs":        100,
     "max_train_batches": None,
     "max_eval_batches":  None,
     "resume":        True,
-    "lr":            1e-4,
+    "lr":            5e-5,
     "weight_decay":  1e-2,       # paper: 1e-2  (original code had 1e-4 — corrected)
     "warmup_epochs": 10,         # linear LR warmup before cosine annealing
     "early_stop_patience": 15,   # stop if val macro F1 does not improve for 15 epochs
@@ -50,7 +51,7 @@ CONFIG = {
     # Misc
     "seed":          42,
     "wandb_project": "skinfusenet",
-    "wandb_run":     "run_v1",
+    "wandb_run":     "run_v2_batch2_accumulated",
 }
 
 
@@ -99,7 +100,10 @@ def load_checkpoint(path, model, optimizer, scheduler, scaler):
 
 
 # ── Training ──────────────────────────────────────────────────────────────────
-def train_one_epoch(model, loader, optimizer, criterion, scaler, device, max_batches=None):
+def train_one_epoch(
+    model, loader, optimizer, criterion, scaler, device,
+    accumulation_steps=1, max_batches=None
+):
     """
     Runs one full training epoch.
     Returns: dict with 'loss', 'accuracy', 'macro_f1'
@@ -110,6 +114,7 @@ def train_one_epoch(model, loader, optimizer, criterion, scaler, device, max_bat
     all_labels = []
 
     processed_batches = 0
+    optimizer.zero_grad(set_to_none=True)
     for batch_index, batch in enumerate(loader):
         if max_batches is not None and batch_index >= max_batches:
             break
@@ -118,17 +123,25 @@ def train_one_epoch(model, loader, optimizer, criterion, scaler, device, max_bat
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
         labels         = batch["label"].to(device, non_blocking=True)
 
-        optimizer.zero_grad()
-
         # autocast requires device_type in PyTorch 2.x
         # torch.cuda.amp.autocast() with no args is deprecated — use this form
         with autocast(device_type=device.type, enabled=device.type == "cuda"):
             logits = model(image, input_ids, attention_mask)
             loss   = criterion(logits, labels)
 
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+        scaler.scale(loss / accumulation_steps).backward()
+        is_accumulation_step = (batch_index + 1) % accumulation_steps == 0
+        is_last_batch = (
+            batch_index + 1 == len(loader)
+            or (
+                max_batches is not None
+                and batch_index + 1 == max_batches
+            )
+        )
+        if is_accumulation_step or is_last_batch:
+            scaler.step(optimizer)
+            scaler.update()
+            optimizer.zero_grad(set_to_none=True)
 
         total_loss += loss.item()
         preds       = logits.argmax(dim=1).cpu().numpy()
@@ -343,6 +356,7 @@ def main():
         # ── Train ─────────────────────────────────────────────────────────────
         train_metrics = train_one_epoch(
             model, train_loader, optimizer, criterion, scaler, device,
+            accumulation_steps=cfg["gradient_accumulation_steps"],
             max_batches=cfg["max_train_batches"],
         )
 
