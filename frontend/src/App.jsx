@@ -3,6 +3,7 @@ import DisclaimerBanner from "./components/DisclaimerBanner"
 import ImageUpload from "./components/ImageUpload"
 import MetadataForm from "./components/MetadataForm"
 import { usePrediction } from "./hooks/usePrediction"
+import ResultsPanel from "./components/ResultsPanel"
 
 function App() {
   const [imageFile, setImageFile] = useState(null)
@@ -49,20 +50,12 @@ function App() {
 
           {/* Result */}
           {result && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-semibold mb-2">
-                ✅ Prediction: {result.predicted_class} ({(result.confidence * 100).toFixed(1)}% confidence)
-              </p>
-              <details>
-                <summary className="text-xs text-green-600 cursor-pointer">Show full API response</summary>
-                <pre className="text-xs text-gray-600 mt-2 overflow-auto">
-                  {JSON.stringify({ ...result, gradcam_image: "[base64 string]" }, null, 2)}
-                </pre>
-              </details>
-              <button
-                onClick={reset}
-                className="mt-3 text-xs text-green-700 underline"
-              >
+            <div>
+              <ResultsPanel
+                result={result}
+                originalImage={imageFile ? URL.createObjectURL(imageFile) : null}
+              />
+              <button onClick={reset} className="mt-4 text-sm text-blue-600 underline">
                 Try another image
               </button>
             </div>
