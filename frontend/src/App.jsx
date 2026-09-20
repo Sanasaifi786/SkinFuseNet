@@ -3,7 +3,12 @@ import DisclaimerBanner from "./components/DisclaimerBanner"
 import ImageUpload from "./components/ImageUpload"
 import MetadataForm from "./components/MetadataForm"
 import { usePrediction } from "./hooks/usePrediction"
+<<<<<<< HEAD
 import ResultsPanel from "./components/ResultsPanel"
+=======
+import ProbabilityChart from "./components/ProbabilityChart"
+import GradCAMViewer from "./components/GradCAMViewer"
+>>>>>>> 3a9c58e376da66672efc2ea21376e49ce7216ff6
 
 function App() {
   const [imageFile, setImageFile] = useState(null)
@@ -50,6 +55,7 @@ function App() {
 
           {/* Result */}
           {result && (
+<<<<<<< HEAD
             <div>
               <ResultsPanel
                 result={result}
@@ -57,6 +63,35 @@ function App() {
               />
               <button onClick={reset} className="mt-4 text-sm text-blue-600 underline">
                 Try another image
+=======
+            <div className="space-y-6 pt-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Top Prediction</span>
+                  <h2 className="text-xl font-bold text-blue-950">{result.predicted_class}</h2>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-blue-600 font-medium">Confidence</span>
+                  <p className="text-lg font-bold text-blue-900">{(result.confidence * 100).toFixed(1)}%</p>
+                </div>
+              </div>
+
+              <ProbabilityChart
+                probabilities={result.probabilities}
+                predictedClass={result.predicted_class}
+              />
+              
+              <GradCAMViewer
+                originalImage={imageFile ? URL.createObjectURL(imageFile) : null}
+                gradcamImage={result.gradcam_image}
+              />
+
+              <button
+                onClick={reset}
+                className="w-full py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                ← Analyze Another Image
+>>>>>>> 3a9c58e376da66672efc2ea21376e49ce7216ff6
               </button>
             </div>
           )}
