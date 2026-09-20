@@ -23,7 +23,7 @@ CONFIG = {
     # Paths — anchored to ml/ directory so script works from any CWD
     "csv_path":      str(ml_dir / "data" / "raw" / "HAM10000_metadata.csv"),
     "img_dir":       str(ml_dir / "data" / "processed"),
-    "checkpoint_dir": str(ml_dir / "checkpoints_v2_batch2_accumulated"),
+    "checkpoint_dir": str(ml_dir / "checkpoints_v3_sampler"),
 
     # Model
     "num_classes":   7,
@@ -38,6 +38,7 @@ CONFIG = {
     "epochs":        100,
     "max_train_batches": None,
     "max_eval_batches":  None,
+    "balanced_sampling": True,
     "resume":        True,
     "lr":            5e-5,
     "weight_decay":  1e-2,       # paper: 1e-2  (original code had 1e-4 — corrected)
@@ -51,7 +52,7 @@ CONFIG = {
     # Misc
     "seed":          42,
     "wandb_project": "skinfusenet",
-    "wandb_run":     "run_v2_batch2_accumulated",
+    "wandb_run":     "run_v3_sampler",
 }
 
 
@@ -227,6 +228,7 @@ def main():
         img_dir=cfg["img_dir"],
         batch_size=cfg["batch_size"],
         seed=cfg["seed"],
+        balanced_sampling=cfg["balanced_sampling"],
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

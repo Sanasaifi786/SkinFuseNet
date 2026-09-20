@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torchvision import transforms
 from sklearn.model_selection import train_test_split
 
@@ -96,6 +96,7 @@ def get_splits(
     img_dir,
     batch_size=32,
     seed=42,
+    balanced_sampling=False,
 ):
     """
     Reads HAM10000 CSV, filters to images that exist on disk,
@@ -107,6 +108,7 @@ def get_splits(
         img_dir    : path to processed image folder
         batch_size : images per batch
         seed       : random seed for reproducibility
+        balanced_sampling : oversample minority classes in the training loader
 
     Returns:
         train_loader, val_loader, test_loader
@@ -182,9 +184,24 @@ def get_splits(
 
     # ── Step 7: DataLoaders ───────────────────────────────────────────────────
     # num_workers=0 is mandatory on Windows — multiprocessing DataLoader crashes otherwise
+    train_sampler = None
+    if balanced_sampling:
+        class_counts = df_train['dx'].value_counts()
+        sample_weights = df_train['dx'].map(
+            lambda label: 1.0 / class_counts[label]
+        ).to_numpy()
+        train_sampler = WeightedRandomSampler(
+            weights=torch.as_tensor(sample_weights, dtype=torch.double),
+            num_samples=len(sample_weights),
+            replacement=True,
+        )
+        print("  Balanced training sampler: enabled")
+
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size,
-        shuffle=True,  num_workers=0, pin_memory=False
+        shuffle=train_sampler is None,
+        sampler=train_sampler,
+        num_workers=0, pin_memory=False
     )
     val_loader = DataLoader(
         val_dataset, batch_size=batch_size,
