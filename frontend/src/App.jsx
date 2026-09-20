@@ -3,6 +3,8 @@ import DisclaimerBanner from "./components/DisclaimerBanner"
 import ImageUpload from "./components/ImageUpload"
 import MetadataForm from "./components/MetadataForm"
 import { usePrediction } from "./hooks/usePrediction"
+import ProbabilityChart from "./components/ProbabilityChart"
+import GradCAMViewer from "./components/GradCAMViewer"
 
 function App() {
   const [imageFile, setImageFile] = useState(null)
@@ -49,21 +51,33 @@ function App() {
 
           {/* Result */}
           {result && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-semibold mb-2">
-                ✅ Prediction: {result.predicted_class} ({(result.confidence * 100).toFixed(1)}% confidence)
-              </p>
-              <details>
-                <summary className="text-xs text-green-600 cursor-pointer">Show full API response</summary>
-                <pre className="text-xs text-gray-600 mt-2 overflow-auto">
-                  {JSON.stringify({ ...result, gradcam_image: "[base64 string]" }, null, 2)}
-                </pre>
-              </details>
+            <div className="space-y-6 pt-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Top Prediction</span>
+                  <h2 className="text-xl font-bold text-blue-950">{result.predicted_class}</h2>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-blue-600 font-medium">Confidence</span>
+                  <p className="text-lg font-bold text-blue-900">{(result.confidence * 100).toFixed(1)}%</p>
+                </div>
+              </div>
+
+              <ProbabilityChart
+                probabilities={result.probabilities}
+                predictedClass={result.predicted_class}
+              />
+              
+              <GradCAMViewer
+                originalImage={imageFile ? URL.createObjectURL(imageFile) : null}
+                gradcamImage={result.gradcam_image}
+              />
+
               <button
                 onClick={reset}
-                className="mt-3 text-xs text-green-700 underline"
+                className="w-full py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
               >
-                Try another image
+                ← Analyze Another Image
               </button>
             </div>
           )}
