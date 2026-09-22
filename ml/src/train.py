@@ -23,7 +23,7 @@ CONFIG = {
     # Paths — anchored to ml/ directory so script works from any CWD
     "csv_path":      str(ml_dir / "data" / "raw" / "HAM10000_metadata.csv"),
     "img_dir":       str(ml_dir / "data" / "processed"),
-    "checkpoint_dir": str(ml_dir / "checkpoints_v3_sampler"),
+    "checkpoint_dir": str(ml_dir / "checkpoints_v4_dropout_gamma"),
 
     # Model
     "num_classes":   7,
@@ -31,6 +31,7 @@ CONFIG = {
     "pretrained":    True,
     "freeze_bert":   True,
     "bert_unfreeze_epoch": 20,  # delay BERT fine-tuning until image branches stabilize
+    "dropout":       0.4,       # V4: increased from 0.3 to reduce overfitting
 
     # Training
     "batch_size":    2,
@@ -46,13 +47,13 @@ CONFIG = {
     "early_stop_patience": 15,   # stop if val macro F1 does not improve for 15 epochs
 
     # Loss
-    "focal_gamma":        2.0,
+    "focal_gamma":        3.0,       # V4: increased from 2.0 to focus harder on minority classes
     "label_smoothing":    0.1,
 
     # Misc
     "seed":          42,
     "wandb_project": "skinfusenet",
-    "wandb_run":     "run_v3_sampler",
+    "wandb_run":     "run_v4_dropout_gamma",
 }
 
 
@@ -251,6 +252,7 @@ def main():
         embed_dim=cfg["embed_dim"],
         pretrained=cfg["pretrained"],
         freeze_bert=cfg["freeze_bert"],
+        dropout=cfg["dropout"],
     ).to(device)
 
     total     = sum(p.numel() for p in model.parameters())

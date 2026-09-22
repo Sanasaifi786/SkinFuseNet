@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinFuseNet — Model Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2235;
+            --border: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-2: linear-gradient(135deg, #10b981, #06b6d4);
+            --gradient-3: linear-gradient(135deg, #f59e0b, #f43f5e);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 60%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .header .badge-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-blue { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .badge-emerald { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .badge-amber { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+
+        /* Winner banner */
+        .winner-banner {
+            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08));
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(16,185,129,0.1); }
+            to { box-shadow: 0 0 40px rgba(16,185,129,0.2); }
+        }
+
+        .winner-banner .trophy { font-size: 2.5rem; }
+        .winner-banner .info h3 {
+            font-size: 1.1rem;
+            color: #34d399;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .winner-banner .info p {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+        .winner-banner .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 24px;
+        }
+        .winner-banner .stat-item {
+            text-align: center;
+        }
+        .winner-banner .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #34d399;
+        }
+        .winner-banner .stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Model cards grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .model-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .model-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59,130,246,0.4);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .model-card.best {
+            border-color: rgba(16,185,129,0.4);
+            background: linear-gradient(180deg, rgba(16,185,129,0.05), var(--bg-card));
+        }
+
+        .model-card.in-progress {
+            border-color: rgba(245,158,11,0.3);
+            border-style: dashed;
+        }
+
+        .model-card .version-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .model-card:nth-child(1) .version-tag { color: var(--accent-blue); }
+        .model-card:nth-child(2) .version-tag { color: var(--accent-purple); }
+        .model-card:nth-child(3) .version-tag { color: var(--accent-emerald); }
+        .model-card:nth-child(4) .version-tag { color: var(--accent-amber); }
+
+        .model-card .model-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .model-card .in-progress-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(245,158,11,0.15);
+            color: #fbbf24;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(245,158,11,0.3);
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .model-card .best-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(16,185,129,0.15);
+            color: #34d399;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(16,185,129,0.3);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .metric-row:last-child { border-bottom: none; }
+
+        .metric-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 0.92rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-value.highlight { color: #34d399; }
+
+        /* Bar behind metric */
+        .metric-bar-wrapper {
+            position: relative;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .metric-bar-wrapper:last-child { border-bottom: none; }
+
+        .metric-bar-bg {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            bottom: 4px;
+            border-radius: 6px;
+            opacity: 0.12;
+            transition: width 1s ease;
+        }
+
+        /* Chart sections */
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .section-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 340px;
+        }
+
+        /* Comparison table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            background: rgba(255,255,255,0.03);
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table td {
+            padding: 14px 20px;
+            font-size: 0.88rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .comparison-table tr:last-child td { border-bottom: none; }
+
+        .comparison-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .comparison-table .best-cell {
+            color: #34d399;
+            font-weight: 700;
+        }
+
+        .comparison-table .version-cell {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-v1 { background: #3b82f6; }
+        .dot-v2 { background: #8b5cf6; }
+        .dot-v3 { background: #10b981; }
+        .dot-v4 { background: #f59e0b; }
+
+        .tag-inprogress {
+            display: inline-block;
+            background: rgba(245,158,11,0.15);
+            color: #fbbf24;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-left: 6px;
+        }
+
+        .tag-best {
+            display: inline-block;
+            background: rgba(16,185,129,0.15);
+            color: #34d399;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-left: 6px;
+        }
+
+        /* Footer note */
+        .footer-note {
+            text-align: center;
+            margin-top: 48px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Key changes section */
+        .changes-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .change-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .change-card .change-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+        }
+
+        .change-card .change-item {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 4px 0;
+            line-height: 1.5;
+        }
+
+        .change-card .change-item strong {
+            color: var(--text-primary);
+        }
+
+        .improvement {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            color: #34d399;
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+
+        .decline {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            color: #f43f5e;
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+
+        @media (max-width: 900px) {
+            .cards-grid, .changes-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-row { grid-template-columns: 1fr; }
+            .winner-banner { flex-direction: column; text-align: center; }
+            .winner-banner .stats { margin-left: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .cards-grid, .changes-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <h1>SkinFuseNet Model Comparison</h1>
+            <p>Performance metrics across all training versions (V1 – V4)</p>
+            <div class="badge-row">
+                <span class="badge badge-blue">4 Model Versions</span>
+                <span class="badge badge-emerald">14 Training Runs</span>
+                <span class="badge badge-amber">170+ Epochs Total</span>
+            </div>
+        </div>
+
+        <!-- Winner Banner -->
+        <div class="winner-banner">
+            <div class="trophy">🏆</div>
+            <div class="info">
+                <h3>Best Model: V3 — Balanced Sampler</h3>
+                <p>Achieved highest validation performance with balanced class sampling on HAM10000 dataset</p>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">84.66%</div>
+                    <div class="stat-label">Val Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">75.20%</div>
+                    <div class="stat-label">Val Macro F1</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Cards -->
+        <div class="cards-grid">
+            <!-- V1 -->
+            <div class="model-card">
+                <div class="version-tag">Version 1</div>
+                <div class="model-name">Baseline</div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-value">81.06%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-value">67.75%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Accuracy</span>
+                    <span class="metric-value">79.44%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Macro F1</span>
+                    <span class="metric-value">60.79%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-value">19</span>
+                </div>
+            </div>
+
+            <!-- V2 -->
+            <div class="model-card">
+                <div class="version-tag">Version 2</div>
+                <div class="model-name">LR + Grad Accum</div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-value">82.61%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-value">74.91%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Accuracy</span>
+                    <span class="metric-value">97.06%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Macro F1</span>
+                    <span class="metric-value">95.49%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-value">38</span>
+                </div>
+            </div>
+
+            <!-- V3 -->
+            <div class="model-card best">
+                <span class="best-badge">★ BEST</span>
+                <div class="version-tag">Version 3</div>
+                <div class="model-name">Balanced Sampler</div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-value highlight">84.66%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-value highlight">75.20%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Accuracy</span>
+                    <span class="metric-value">99.60%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Macro F1</span>
+                    <span class="metric-value">99.60%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-value">79</span>
+                </div>
+            </div>
+
+            <!-- V4 -->
+            <div class="model-card in-progress">
+                <span class="in-progress-badge">⏳ IN PROGRESS</span>
+                <div class="version-tag">Version 4</div>
+                <div class="model-name">Dropout + Gamma</div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-value">82.91%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-value">73.64%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Accuracy</span>
+                    <span class="metric-value">97.99%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train Macro F1</span>
+                    <span class="metric-value">97.95%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-value">34 / 100</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="section">
+            <h2 class="section-title">Performance Comparison</h2>
+            <p class="section-subtitle">Validation metrics at best checkpoint for each model version</p>
+
+            <div class="chart-row">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="valChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="trainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="gapChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-container">
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Comparison Table -->
+        <div class="section">
+            <h2 class="section-title">Detailed Metrics Comparison</h2>
+            <p class="section-subtitle">All metrics at the best validation checkpoint for each version</p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Val Accuracy</th>
+                        <th>Val Macro F1</th>
+                        <th>Val Loss</th>
+                        <th>Train Accuracy</th>
+                        <th>Train Macro F1</th>
+                        <th>Train Loss</th>
+                        <th>Best Epoch</th>
+                        <th>Total Epochs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><div class="version-cell"><span class="dot dot-v1"></span> V1 Baseline</div></td>
+                        <td>81.06%</td>
+                        <td>67.75%</td>
+                        <td>0.5017</td>
+                        <td>79.44%</td>
+                        <td>60.79%</td>
+                        <td>0.5368</td>
+                        <td>4</td>
+                        <td>19</td>
+                    </tr>
+                    <tr>
+                        <td><div class="version-cell"><span class="dot dot-v2"></span> V2 LR + Accum</div></td>
+                        <td>82.61%</td>
+                        <td>74.91%</td>
+                        <td>0.5144</td>
+                        <td>97.06%</td>
+                        <td>95.49%</td>
+                        <td>0.2990</td>
+                        <td>23</td>
+                        <td>38</td>
+                    </tr>
+                    <tr>
+                        <td><div class="version-cell"><span class="dot dot-v3"></span> V3 Sampler <span class="tag-best">BEST</span></div></td>
+                        <td class="best-cell">84.66%</td>
+                        <td class="best-cell">75.20%</td>
+                        <td>0.5448</td>
+                        <td>99.60%</td>
+                        <td>99.60%</td>
+                        <td class="best-cell">0.2684</td>
+                        <td>64</td>
+                        <td>79</td>
+                    </tr>
+                    <tr>
+                        <td><div class="version-cell"><span class="dot dot-v4"></span> V4 Dropout <span class="tag-inprogress">IN PROGRESS</span></div></td>
+                        <td>82.91%</td>
+                        <td>73.64%</td>
+                        <td class="best-cell">0.4530</td>
+                        <td>97.99%</td>
+                        <td>97.95%</td>
+                        <td>0.2409</td>
+                        <td>33</td>
+                        <td>34 / 100</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Key Changes -->
+        <div class="section">
+            <h2 class="section-title">What Changed Between Versions</h2>
+            <p class="section-subtitle">Key hyperparameter and architecture changes that impacted performance</p>
+
+            <div class="changes-grid">
+                <div class="change-card">
+                    <div class="change-title" style="color: var(--accent-blue);">V1 — Baseline</div>
+                    <div class="change-item"><strong>LR:</strong> 1e-4</div>
+                    <div class="change-item"><strong>Batch:</strong> 2</div>
+                    <div class="change-item"><strong>BERT unfreeze:</strong> epoch 5</div>
+                    <div class="change-item"><strong>Focal γ:</strong> 2.0</div>
+                    <div class="change-item"><strong>Dropout:</strong> default</div>
+                    <div class="change-item"><strong>Sampling:</strong> random</div>
+                </div>
+                <div class="change-card">
+                    <div class="change-title" style="color: var(--accent-purple);">V2 — LR + Accum</div>
+                    <div class="change-item"><strong>LR:</strong> 5e-5 <span class="improvement">↓ 2x</span></div>
+                    <div class="change-item"><strong>Grad accum:</strong> 4 steps</div>
+                    <div class="change-item"><strong>BERT unfreeze:</strong> epoch 20 <span class="improvement">↑ delayed</span></div>
+                    <div class="change-item"><strong>Result:</strong> <span class="improvement">+7.16% F1</span></div>
+                </div>
+                <div class="change-card">
+                    <div class="change-title" style="color: var(--accent-emerald);">V3 — Sampler</div>
+                    <div class="change-item"><strong>Balanced sampling:</strong> ON <span class="improvement">✓ NEW</span></div>
+                    <div class="change-item"><strong>Other params:</strong> same as V2</div>
+                    <div class="change-item"><strong>Result:</strong> <span class="improvement">+0.29% F1</span></div>
+                    <div class="change-item" style="color: #34d399; font-weight: 600;">★ Best overall</div>
+                </div>
+                <div class="change-card">
+                    <div class="change-title" style="color: var(--accent-amber);">V4 — Regularization</div>
+                    <div class="change-item"><strong>Dropout:</strong> 0.4 <span class="improvement">↑ NEW</span></div>
+                    <div class="change-item"><strong>Focal γ:</strong> 3.0 <span class="improvement">↑ from 2.0</span></div>
+                    <div class="change-item"><strong>Result:</strong> <span class="decline">-1.56% F1</span></div>
+                    <div class="change-item" style="color: #fbbf24; font-weight: 500;">⏳ Still training...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-note">
+            SkinFuseNet Model Training Report • Data extracted from W&B offline runs • Generated Sep 21, 2026
+            <br>
+            <em>Note: Precision & Recall were not logged separately during training. Macro F1 is the harmonic mean of per-class precision & recall.</em>
+        </div>
+
+    </div>
+
+    <script>
+        // Chart.js global config
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        Chart.defaults.plugins.legend.labels.pointStyleWidth = 14;
+
+        const colors = {
+            v1: { bg: 'rgba(59,130,246,0.7)', border: '#3b82f6' },
+            v2: { bg: 'rgba(139,92,246,0.7)', border: '#8b5cf6' },
+            v3: { bg: 'rgba(16,185,129,0.7)', border: '#10b981' },
+            v4: { bg: 'rgba(245,158,11,0.5)', border: '#f59e0b' },  // lighter for in-progress
+        };
+
+        const v4Pattern = (ctx) => {
+            // Diagonal stripes for V4 to show in-progress
+            const canvas = document.createElement('canvas');
+            canvas.width = 10; canvas.height = 10;
+            const pCtx = canvas.getContext('2d');
+            pCtx.strokeStyle = 'rgba(245,158,11,0.6)';
+            pCtx.lineWidth = 2;
+            pCtx.beginPath();
+            pCtx.moveTo(0, 10); pCtx.lineTo(10, 0);
+            pCtx.stroke();
+            return ctx.createPattern(canvas, 'repeat');
+        };
+
+        const labels = ['V1\nBaseline', 'V2\nLR+Accum', 'V3\nSampler ★', 'V4\nDropout ⏳'];
+
+        // 1. Validation Metrics Chart
+        new Chart(document.getElementById('valChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Val Accuracy (%)',
+                        data: [81.06, 82.61, 84.66, 82.91],
+                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderDash: [0, 0, 0, [5, 5]],
+                    },
+                    {
+                        label: 'Val Macro F1 (%)',
+                        data: [67.75, 74.91, 75.20, 73.64],
+                        backgroundColor: [
+                            'rgba(59,130,246,0.35)',
+                            'rgba(139,92,246,0.35)',
+                            'rgba(16,185,129,0.35)',
+                            'rgba(245,158,11,0.25)',
+                        ],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Validation Performance',
+                        font: { size: 15, weight: '700' },
+                        color: '#f1f5f9',
+                        padding: { bottom: 16 }
+                    },
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(ctx) {
+                                if (ctx[0].dataIndex === 3) return '⏳ V4 still in progress (34/100 epochs)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 55,
+                        max: 100,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { callback: v => v + '%' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. Training Metrics Chart
+        new Chart(document.getElementById('trainChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Train Accuracy (%)',
+                        data: [79.44, 97.06, 99.60, 97.99],
+                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    },
+                    {
+                        label: 'Train Macro F1 (%)',
+                        data: [60.79, 95.49, 99.60, 97.95],
+                        backgroundColor: [
+                            'rgba(59,130,246,0.35)',
+                            'rgba(139,92,246,0.35)',
+                            'rgba(16,185,129,0.35)',
+                            'rgba(245,158,11,0.25)',
+                        ],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Training Performance',
+                        font: { size: 15, weight: '700' },
+                        color: '#f1f5f9',
+                        padding: { bottom: 16 }
+                    },
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        max: 100,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { callback: v => v + '%' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 3. Train-Val Gap (Overfitting) Chart
+        new Chart(document.getElementById('gapChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Accuracy Gap (Train - Val)',
+                        data: [
+                            (79.44 - 81.06).toFixed(1),  // V1 actually val > train early on
+                            (97.06 - 82.61).toFixed(1),
+                            (99.60 - 84.66).toFixed(1),
+                            (97.99 - 82.91).toFixed(1),
+                        ],
+                        backgroundColor: [
+                            'rgba(59,130,246,0.5)',
+                            'rgba(139,92,246,0.5)',
+                            'rgba(244,63,94,0.5)',
+                            'rgba(245,158,11,0.35)',
+                        ],
+                        borderColor: [colors.v1.border, colors.v2.border, '#f43f5e', colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    },
+                    {
+                        label: 'F1 Gap (Train - Val)',
+                        data: [
+                            (60.79 - 67.75).toFixed(1),  // V1 val > train
+                            (95.49 - 74.91).toFixed(1),
+                            (99.60 - 75.20).toFixed(1),
+                            (97.95 - 73.64).toFixed(1),
+                        ],
+                        backgroundColor: [
+                            'rgba(59,130,246,0.25)',
+                            'rgba(139,92,246,0.25)',
+                            'rgba(244,63,94,0.25)',
+                            'rgba(245,158,11,0.18)',
+                        ],
+                        borderColor: [colors.v1.border, colors.v2.border, '#f43f5e', colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Overfitting Gap (Train − Val)',
+                        font: { size: 15, weight: '700' },
+                        color: '#f1f5f9',
+                        padding: { bottom: 16 }
+                    },
+                    subtitle: {
+                        display: true,
+                        text: 'Lower is better — high gap indicates overfitting',
+                        font: { size: 11 },
+                        color: '#64748b',
+                        padding: { bottom: 12 }
+                    },
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { callback: v => v + '%' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 4. Loss Comparison Chart
+        new Chart(document.getElementById('lossChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Train Loss',
+                        data: [0.5368, 0.2990, 0.2684, 0.2409],
+                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    },
+                    {
+                        label: 'Val Loss',
+                        data: [0.5017, 0.5144, 0.5448, 0.4530],
+                        backgroundColor: [
+                            'rgba(59,130,246,0.35)',
+                            'rgba(139,92,246,0.35)',
+                            'rgba(16,185,129,0.35)',
+                            'rgba(245,158,11,0.25)',
+                        ],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Loss Comparison',
+                        font: { size: 15, weight: '700' },
+                        color: '#f1f5f9',
+                        padding: { bottom: 16 }
+                    },
+                    subtitle: {
+                        display: true,
+                        text: 'Lower is better',
+                        font: { size: 11 },
+                        color: '#64748b',
+                        padding: { bottom: 12 }
+                    },
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 0.8,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
