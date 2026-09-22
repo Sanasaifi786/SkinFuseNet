@@ -6,6 +6,9 @@ data/
 *.pth
 *.pt
 *.h5
+ml/src/wandb/
+ml/src/v5/
+SkinFuseNet_v5_solution/
 
 # Environment folders
 venv/

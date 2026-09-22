@@ -21,9 +21,7 @@
             --accent-amber: #f59e0b;
             --accent-rose: #f43f5e;
             --accent-cyan: #06b6d4;
-            --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            --gradient-2: linear-gradient(135deg, #10b981, #06b6d4);
-            --gradient-3: linear-gradient(135deg, #f59e0b, #f43f5e);
+            --accent-pink: #ec4899;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -49,7 +47,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 40px 24px;
         }
@@ -152,16 +150,16 @@
         /* Model cards grid */
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
             margin-bottom: 48px;
         }
 
         .model-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 12px;
+            padding: 16px;
             position: relative;
             transition: all 0.3s ease;
             overflow: hidden;
@@ -195,23 +193,25 @@
         .model-card:nth-child(2) .version-tag { color: var(--accent-purple); }
         .model-card:nth-child(3) .version-tag { color: var(--accent-emerald); }
         .model-card:nth-child(4) .version-tag { color: var(--accent-amber); }
+        .model-card:nth-child(5) .version-tag { color: var(--accent-rose); }
+        .model-card:nth-child(6) .version-tag { color: var(--accent-cyan); }
 
         .model-card .model-name {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             color: var(--text-primary);
         }
 
         .model-card .in-progress-badge {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 8px;
+            right: 8px;
             background: rgba(245,158,11,0.15);
             color: #fbbf24;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             font-weight: 700;
-            padding: 3px 10px;
+            padding: 2px 6px;
             border-radius: 999px;
             border: 1px solid rgba(245,158,11,0.3);
             animation: pulse-badge 2s ease-in-out infinite;
@@ -224,13 +224,13 @@
 
         .model-card .best-badge {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 8px;
+            right: 8px;
             background: rgba(16,185,129,0.15);
             color: #34d399;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             font-weight: 700;
-            padding: 3px 10px;
+            padding: 2px 6px;
             border-radius: 999px;
             border: 1px solid rgba(16,185,129,0.3);
         }
@@ -239,44 +239,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 6px 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
 
         .metric-row:last-child { border-bottom: none; }
 
         .metric-label {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             font-weight: 500;
         }
 
         .metric-value {
-            font-size: 0.92rem;
+            font-size: 0.85rem;
             font-weight: 700;
             font-variant-numeric: tabular-nums;
         }
 
         .metric-value.highlight { color: #34d399; }
-
-        /* Bar behind metric */
-        .metric-bar-wrapper {
-            position: relative;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .metric-bar-wrapper:last-child { border-bottom: none; }
-
-        .metric-bar-bg {
-            position: absolute;
-            left: 0;
-            top: 4px;
-            bottom: 4px;
-            border-radius: 6px;
-            opacity: 0.12;
-            transition: width 1s ease;
-        }
 
         /* Chart sections */
         .section {
@@ -374,6 +355,8 @@
         .dot-v2 { background: #8b5cf6; }
         .dot-v3 { background: #10b981; }
         .dot-v4 { background: #f59e0b; }
+        .dot-v5 { background: #f43f5e; }
+        .dot-v6 { background: #06b6d4; }
 
         .tag-inprogress {
             display: inline-block;
@@ -407,67 +390,19 @@
             border-top: 1px solid var(--border);
         }
 
-        /* Key changes section */
-        .changes-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 48px;
-        }
-
-        .change-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .change-card .change-title {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 10px;
-        }
-
-        .change-card .change-item {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            padding: 4px 0;
-            line-height: 1.5;
-        }
-
-        .change-card .change-item strong {
-            color: var(--text-primary);
-        }
-
-        .improvement {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            color: #34d399;
-            font-weight: 600;
-            font-size: 0.78rem;
-        }
-
-        .decline {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            color: #f43f5e;
-            font-weight: 600;
-            font-size: 0.78rem;
+        @media (max-width: 1200px) {
+            .cards-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
         @media (max-width: 900px) {
-            .cards-grid, .changes-grid { grid-template-columns: repeat(2, 1fr); }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
             .chart-row { grid-template-columns: 1fr; }
             .winner-banner { flex-direction: column; text-align: center; }
             .winner-banner .stats { margin-left: 0; }
         }
 
         @media (max-width: 600px) {
-            .cards-grid, .changes-grid { grid-template-columns: 1fr; }
+            .cards-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -477,11 +412,11 @@
         <!-- Header -->
         <div class="header">
             <h1>SkinFuseNet Model Comparison</h1>
-            <p>Performance metrics across all training versions (V1 – V4)</p>
+            <p>Performance metrics across all training versions (V1 – V6)</p>
             <div class="badge-row">
-                <span class="badge badge-blue">4 Model Versions</span>
-                <span class="badge badge-emerald">14 Training Runs</span>
-                <span class="badge badge-amber">170+ Epochs Total</span>
+                <span class="badge badge-blue">6 Model Versions</span>
+                <span class="badge badge-emerald">17 Training Runs</span>
+                <span class="badge badge-amber">200+ Epochs Total</span>
             </div>
         </div>
 
@@ -511,23 +446,19 @@
                 <div class="version-tag">Version 1</div>
                 <div class="model-name">Baseline</div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-label">Val Acc</span>
                     <span class="metric-value">81.06%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-label">Val F1</span>
                     <span class="metric-value">67.75%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Train Accuracy</span>
-                    <span class="metric-value">79.44%</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Train Macro F1</span>
+                    <span class="metric-label">Train F1</span>
                     <span class="metric-value">60.79%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-label">Epochs</span>
                     <span class="metric-value">19</span>
                 </div>
             </div>
@@ -535,25 +466,21 @@
             <!-- V2 -->
             <div class="model-card">
                 <div class="version-tag">Version 2</div>
-                <div class="model-name">LR + Grad Accum</div>
+                <div class="model-name">LR + Accum</div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-label">Val Acc</span>
                     <span class="metric-value">82.61%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-label">Val F1</span>
                     <span class="metric-value">74.91%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Train Accuracy</span>
-                    <span class="metric-value">97.06%</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Train Macro F1</span>
+                    <span class="metric-label">Train F1</span>
                     <span class="metric-value">95.49%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-label">Epochs</span>
                     <span class="metric-value">38</span>
                 </div>
             </div>
@@ -562,53 +489,89 @@
             <div class="model-card best">
                 <span class="best-badge">★ BEST</span>
                 <div class="version-tag">Version 3</div>
-                <div class="model-name">Balanced Sampler</div>
+                <div class="model-name">Sampler</div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Accuracy</span>
+                    <span class="metric-label">Val Acc</span>
                     <span class="metric-value highlight">84.66%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Macro F1</span>
+                    <span class="metric-label">Val F1</span>
                     <span class="metric-value highlight">75.20%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Train Accuracy</span>
+                    <span class="metric-label">Train F1</span>
                     <span class="metric-value">99.60%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Train Macro F1</span>
-                    <span class="metric-value">99.60%</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Epochs Trained</span>
+                    <span class="metric-label">Epochs</span>
                     <span class="metric-value">79</span>
                 </div>
             </div>
 
             <!-- V4 -->
+            <div class="model-card">
+                <div class="version-tag">Version 4</div>
+                <div class="model-name">Dropout</div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Acc</span>
+                    <span class="metric-value">84.21%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Val F1</span>
+                    <span class="metric-value">74.26%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train F1</span>
+                    <span class="metric-value">98.21%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Epochs</span>
+                    <span class="metric-value">52</span>
+                </div>
+            </div>
+
+            <!-- V5 -->
+            <div class="model-card">
+                <div class="version-tag">Version 5</div>
+                <div class="model-name">Batch 4</div>
+                <div class="metric-row">
+                    <span class="metric-label">Val Acc</span>
+                    <span class="metric-value">84.00%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Val F1</span>
+                    <span class="metric-value">73.77%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Train F1</span>
+                    <span class="metric-value">98.69%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Epochs</span>
+                    <span class="metric-value">35</span>
+                </div>
+            </div>
+
+            <!-- V6 -->
             <div class="model-card in-progress">
                 <span class="in-progress-badge">⏳ IN PROGRESS</span>
-                <div class="version-tag">Version 4</div>
-                <div class="model-name">Dropout + Gamma</div>
+                <div class="version-tag">Version 6</div>
+                <div class="model-name">Cross Entropy</div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Accuracy</span>
-                    <span class="metric-value">82.91%</span>
+                    <span class="metric-label">Val Acc</span>
+                    <span class="metric-value">78.29%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Val Macro F1</span>
-                    <span class="metric-value">73.64%</span>
+                    <span class="metric-label">Val F1</span>
+                    <span class="metric-value">66.01%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Train Accuracy</span>
-                    <span class="metric-value">97.99%</span>
+                    <span class="metric-label">Train F1</span>
+                    <span class="metric-value">85.07%</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Train Macro F1</span>
-                    <span class="metric-value">97.95%</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Epochs Trained</span>
-                    <span class="metric-value">34 / 100</span>
+                    <span class="metric-label">Epochs</span>
+                    <span class="metric-value">5</span>
                 </div>
             </div>
         </div>
@@ -699,64 +662,45 @@
                         <td>79</td>
                     </tr>
                     <tr>
-                        <td><div class="version-cell"><span class="dot dot-v4"></span> V4 Dropout <span class="tag-inprogress">IN PROGRESS</span></div></td>
-                        <td>82.91%</td>
-                        <td>73.64%</td>
-                        <td class="best-cell">0.4530</td>
-                        <td>97.99%</td>
-                        <td>97.95%</td>
-                        <td>0.2409</td>
-                        <td>33</td>
-                        <td>34 / 100</td>
+                        <td><div class="version-cell"><span class="dot dot-v4"></span> V4 Dropout</div></td>
+                        <td>84.21%</td>
+                        <td>74.26%</td>
+                        <td>0.4457</td>
+                        <td>98.20%</td>
+                        <td>98.21%</td>
+                        <td>0.2386</td>
+                        <td>38</td>
+                        <td>52</td>
+                    </tr>
+                    <tr>
+                        <td><div class="version-cell"><span class="dot dot-v5"></span> V5 Batch 4</div></td>
+                        <td>84.00%</td>
+                        <td>73.77%</td>
+                        <td class="best-cell">0.4366</td>
+                        <td>98.70%</td>
+                        <td>98.69%</td>
+                        <td>0.2355</td>
+                        <td>20</td>
+                        <td>35</td>
+                    </tr>
+                    <tr>
+                        <td><div class="version-cell"><span class="dot dot-v6"></span> V6 CE <span class="tag-inprogress">IN PROGRESS</span></div></td>
+                        <td>78.29%</td>
+                        <td>66.01%</td>
+                        <td>0.9574</td>
+                        <td>85.19%</td>
+                        <td>85.07%</td>
+                        <td>0.7995</td>
+                        <td>5</td>
+                        <td>5</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Key Changes -->
-        <div class="section">
-            <h2 class="section-title">What Changed Between Versions</h2>
-            <p class="section-subtitle">Key hyperparameter and architecture changes that impacted performance</p>
-
-            <div class="changes-grid">
-                <div class="change-card">
-                    <div class="change-title" style="color: var(--accent-blue);">V1 — Baseline</div>
-                    <div class="change-item"><strong>LR:</strong> 1e-4</div>
-                    <div class="change-item"><strong>Batch:</strong> 2</div>
-                    <div class="change-item"><strong>BERT unfreeze:</strong> epoch 5</div>
-                    <div class="change-item"><strong>Focal γ:</strong> 2.0</div>
-                    <div class="change-item"><strong>Dropout:</strong> default</div>
-                    <div class="change-item"><strong>Sampling:</strong> random</div>
-                </div>
-                <div class="change-card">
-                    <div class="change-title" style="color: var(--accent-purple);">V2 — LR + Accum</div>
-                    <div class="change-item"><strong>LR:</strong> 5e-5 <span class="improvement">↓ 2x</span></div>
-                    <div class="change-item"><strong>Grad accum:</strong> 4 steps</div>
-                    <div class="change-item"><strong>BERT unfreeze:</strong> epoch 20 <span class="improvement">↑ delayed</span></div>
-                    <div class="change-item"><strong>Result:</strong> <span class="improvement">+7.16% F1</span></div>
-                </div>
-                <div class="change-card">
-                    <div class="change-title" style="color: var(--accent-emerald);">V3 — Sampler</div>
-                    <div class="change-item"><strong>Balanced sampling:</strong> ON <span class="improvement">✓ NEW</span></div>
-                    <div class="change-item"><strong>Other params:</strong> same as V2</div>
-                    <div class="change-item"><strong>Result:</strong> <span class="improvement">+0.29% F1</span></div>
-                    <div class="change-item" style="color: #34d399; font-weight: 600;">★ Best overall</div>
-                </div>
-                <div class="change-card">
-                    <div class="change-title" style="color: var(--accent-amber);">V4 — Regularization</div>
-                    <div class="change-item"><strong>Dropout:</strong> 0.4 <span class="improvement">↑ NEW</span></div>
-                    <div class="change-item"><strong>Focal γ:</strong> 3.0 <span class="improvement">↑ from 2.0</span></div>
-                    <div class="change-item"><strong>Result:</strong> <span class="decline">-1.56% F1</span></div>
-                    <div class="change-item" style="color: #fbbf24; font-weight: 500;">⏳ Still training...</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Footer -->
         <div class="footer-note">
-            SkinFuseNet Model Training Report • Data extracted from W&B offline runs • Generated Sep 21, 2026
-            <br>
-            <em>Note: Precision & Recall were not logged separately during training. Macro F1 is the harmonic mean of per-class precision & recall.</em>
+            SkinFuseNet Model Training Report • Generated Sep 23, 2026
         </div>
 
     </div>
@@ -772,23 +716,12 @@
             v1: { bg: 'rgba(59,130,246,0.7)', border: '#3b82f6' },
             v2: { bg: 'rgba(139,92,246,0.7)', border: '#8b5cf6' },
             v3: { bg: 'rgba(16,185,129,0.7)', border: '#10b981' },
-            v4: { bg: 'rgba(245,158,11,0.5)', border: '#f59e0b' },  // lighter for in-progress
+            v4: { bg: 'rgba(245,158,11,0.7)', border: '#f59e0b' }, 
+            v5: { bg: 'rgba(244,63,94,0.7)', border: '#f43f5e' }, 
+            v6: { bg: 'rgba(6,182,212,0.4)', border: '#06b6d4' }, 
         };
 
-        const v4Pattern = (ctx) => {
-            // Diagonal stripes for V4 to show in-progress
-            const canvas = document.createElement('canvas');
-            canvas.width = 10; canvas.height = 10;
-            const pCtx = canvas.getContext('2d');
-            pCtx.strokeStyle = 'rgba(245,158,11,0.6)';
-            pCtx.lineWidth = 2;
-            pCtx.beginPath();
-            pCtx.moveTo(0, 10); pCtx.lineTo(10, 0);
-            pCtx.stroke();
-            return ctx.createPattern(canvas, 'repeat');
-        };
-
-        const labels = ['V1\nBaseline', 'V2\nLR+Accum', 'V3\nSampler ★', 'V4\nDropout ⏳'];
+        const labels = ['V1\nBaseline', 'V2\nLR+Accum', 'V3\nSampler ★', 'V4\nDropout', 'V5\nBatch 4', 'V6\nCE ⏳'];
 
         // 1. Validation Metrics Chart
         new Chart(document.getElementById('valChart'), {
@@ -798,23 +731,25 @@
                 datasets: [
                     {
                         label: 'Val Accuracy (%)',
-                        data: [81.06, 82.61, 84.66, 82.91],
-                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg],
-                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        data: [81.06, 82.61, 84.66, 84.21, 84.00, 78.29],
+                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg, colors.v5.bg, colors.v6.bg],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
-                        borderDash: [0, 0, 0, [5, 5]],
+                        borderDash: [0, 0, 0, 0, 0, [5, 5]],
                     },
                     {
                         label: 'Val Macro F1 (%)',
-                        data: [67.75, 74.91, 75.20, 73.64],
+                        data: [67.75, 74.91, 75.20, 74.26, 73.77, 66.01],
                         backgroundColor: [
                             'rgba(59,130,246,0.35)',
                             'rgba(139,92,246,0.35)',
                             'rgba(16,185,129,0.35)',
-                            'rgba(245,158,11,0.25)',
+                            'rgba(245,158,11,0.35)',
+                            'rgba(244,63,94,0.35)',
+                            'rgba(6,182,212,0.2)'
                         ],
-                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     }
@@ -831,14 +766,7 @@
                         color: '#f1f5f9',
                         padding: { bottom: 16 }
                     },
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            afterBody: function(ctx) {
-                                if (ctx[0].dataIndex === 3) return '⏳ V4 still in progress (34/100 epochs)';
-                            }
-                        }
-                    }
+                    legend: { position: 'bottom' }
                 },
                 scales: {
                     y: {
@@ -861,22 +789,24 @@
                 datasets: [
                     {
                         label: 'Train Accuracy (%)',
-                        data: [79.44, 97.06, 99.60, 97.99],
-                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg],
-                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        data: [79.44, 97.06, 99.60, 98.20, 98.70, 85.19],
+                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg, colors.v5.bg, colors.v6.bg],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     },
                     {
                         label: 'Train Macro F1 (%)',
-                        data: [60.79, 95.49, 99.60, 97.95],
+                        data: [60.79, 95.49, 99.60, 98.21, 98.69, 85.07],
                         backgroundColor: [
                             'rgba(59,130,246,0.35)',
                             'rgba(139,92,246,0.35)',
                             'rgba(16,185,129,0.35)',
-                            'rgba(245,158,11,0.25)',
+                            'rgba(245,158,11,0.35)',
+                            'rgba(244,63,94,0.35)',
+                            'rgba(6,182,212,0.2)'
                         ],
-                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     }
@@ -917,36 +847,44 @@
                     {
                         label: 'Accuracy Gap (Train - Val)',
                         data: [
-                            (79.44 - 81.06).toFixed(1),  // V1 actually val > train early on
+                            (79.44 - 81.06).toFixed(1),
                             (97.06 - 82.61).toFixed(1),
                             (99.60 - 84.66).toFixed(1),
-                            (97.99 - 82.91).toFixed(1),
+                            (98.20 - 84.21).toFixed(1),
+                            (98.70 - 84.00).toFixed(1),
+                            (85.19 - 78.29).toFixed(1),
                         ],
                         backgroundColor: [
                             'rgba(59,130,246,0.5)',
                             'rgba(139,92,246,0.5)',
                             'rgba(244,63,94,0.5)',
-                            'rgba(245,158,11,0.35)',
+                            'rgba(245,158,11,0.5)',
+                            'rgba(244,63,94,0.5)',
+                            'rgba(6,182,212,0.3)'
                         ],
-                        borderColor: [colors.v1.border, colors.v2.border, '#f43f5e', colors.v4.border],
+                        borderColor: [colors.v1.border, colors.v2.border, '#f43f5e', colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     },
                     {
                         label: 'F1 Gap (Train - Val)',
                         data: [
-                            (60.79 - 67.75).toFixed(1),  // V1 val > train
+                            (60.79 - 67.75).toFixed(1),
                             (95.49 - 74.91).toFixed(1),
                             (99.60 - 75.20).toFixed(1),
-                            (97.95 - 73.64).toFixed(1),
+                            (98.21 - 74.26).toFixed(1),
+                            (98.69 - 73.77).toFixed(1),
+                            (85.07 - 66.01).toFixed(1),
                         ],
                         backgroundColor: [
                             'rgba(59,130,246,0.25)',
                             'rgba(139,92,246,0.25)',
                             'rgba(244,63,94,0.25)',
-                            'rgba(245,158,11,0.18)',
+                            'rgba(245,158,11,0.25)',
+                            'rgba(244,63,94,0.25)',
+                            'rgba(6,182,212,0.15)'
                         ],
-                        borderColor: [colors.v1.border, colors.v2.border, '#f43f5e', colors.v4.border],
+                        borderColor: [colors.v1.border, colors.v2.border, '#f43f5e', colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     }
@@ -990,22 +928,24 @@
                 datasets: [
                     {
                         label: 'Train Loss',
-                        data: [0.5368, 0.2990, 0.2684, 0.2409],
-                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg],
-                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        data: [0.5368, 0.2990, 0.2684, 0.2386, 0.2355, 0.7995],
+                        backgroundColor: [colors.v1.bg, colors.v2.bg, colors.v3.bg, colors.v4.bg, colors.v5.bg, colors.v6.bg],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     },
                     {
                         label: 'Val Loss',
-                        data: [0.5017, 0.5144, 0.5448, 0.4530],
+                        data: [0.5017, 0.5144, 0.5448, 0.4457, 0.4366, 0.9574],
                         backgroundColor: [
                             'rgba(59,130,246,0.35)',
                             'rgba(139,92,246,0.35)',
                             'rgba(16,185,129,0.35)',
-                            'rgba(245,158,11,0.25)',
+                            'rgba(245,158,11,0.35)',
+                            'rgba(244,63,94,0.35)',
+                            'rgba(6,182,212,0.2)'
                         ],
-                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border],
+                        borderColor: [colors.v1.border, colors.v2.border, colors.v3.border, colors.v4.border, colors.v5.border, colors.v6.border],
                         borderWidth: 2,
                         borderRadius: 8,
                     }
@@ -1034,7 +974,7 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 0.8,
+                        max: 1.0,
                         grid: { color: 'rgba(255,255,255,0.05)' },
                     },
                     x: { grid: { display: false } }
