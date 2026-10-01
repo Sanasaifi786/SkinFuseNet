@@ -8,7 +8,9 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-In%20Progress-orange.svg)]()
 
-> **Research paper companion web application** — SkinFuseNet is a multimodal hybrid deep learning system integrating SAM-guided segmentation, dual-branch CNN–ViT feature extraction, and BERT-based metadata fusion for 7-class skin lesion classification on the HAM10000 benchmark, achieving **97.1% accuracy** and **94.0% macro F1-score**.
+> **Research paper companion web application** — SkinFuseNet is a multimodal hybrid deep learning system integrating SAM-guided segmentation, dual-branch CNN–ViT feature extraction, and BERT-based metadata fusion for 7-class skin lesion classification on the HAM10000 benchmark. The current deployment target is the private **v3** checkpoint; benchmark claims remain provisional until the v3 evaluation artifact is published.
+
+**Current model:** `SkinFuseNet v3`. The checkpoint is intentionally excluded from GitHub. Place the private v3 artifact in `backend/models/` or `ml/models/` using one of the names recognized by `backend/app/core/model_loader.py`. The API starts without weights for health checks, but `/predict` returns `503` until the checkpoint is present; it never returns fabricated predictions or heatmaps.
 
 ---
 
@@ -232,7 +234,7 @@ skinfusenet/
 - [x] Week 1 — API contract agreed and documented — **Team**
 - [x] Week 2 — `dataset.py` with DataLoader working — **Person A**
 - [x] Week 2 — SAM preprocessing on single image — **Person A**
-- [x] Week 2 — Mock `POST /predict` endpoint in FastAPI — **Person A**
+- [x] Week 2 — Initial `POST /predict` API contract — **Person A**
 - [x] Week 2 — `ImageUpload.jsx` + `MetadataForm.jsx` built — **Person C**
 - [x] Week 2 — Frontend connected to mock backend — **Person A**
 - [x] Week 3 — Full SAM preprocessing pipeline over all 10,015 images — **Person A**
@@ -333,8 +335,8 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 
-# Copy trained model here (after ML training is complete)
-# cp ../ml/checkpoints/skinfusenet.pt models/
+# Copy the private v3 model here (the artifact is ignored by Git)
+# cp /path/to/skinfusenet_v3.pt models/
 
 # Run development server
 uvicorn app.main:app --reload --port 8000
@@ -414,7 +416,7 @@ docker-compose up --build
 
 ### Stage 4 — Output
 - **7-class softmax** over MEL · NV · BKL · BCC · AKIEC · DF · VASC
-- **GradCAM:** `L_GradCAM = ReLU(Σ αk·Ak)` overlaid on original image
+- **GradCAM:** planned for the real trained model; the API does not return a synthetic heatmap
 
 ### Training Config
 ```
@@ -487,13 +489,13 @@ Accepts a dermoscopic image and patient metadata, returns prediction + GradCAM.
 | Week | Phase | All 3 people work on | Deliverable |
 |------|-------|----------------------|-------------|
 | 1 | Setup | Git, monorepo, Python/React/FastAPI basics, EDA | Repo live, HAM10000 loaded |
-| 2 | ML Foundations | dataset.py, SAM on 1 image, mock API, React upload form | DataLoader working, mock API live |
+| 2 | ML Foundations | dataset.py, SAM on 1 image, API contract, React upload form | DataLoader working |
 | 3 | ML Preprocessing | Full SAM pipeline, CLAHE, augmentation.py | All 10,015 images preprocessed |
 | 4 | ML Data | BERT tokenisation, stratified split, DataLoader final | dataset.py production-ready |
 | 5 | ML Branches | cnn.py, vit.py, bert.py — all 3 branches | Forward pass shapes verified |
 | 6 | ML Fusion | fusion.py, loss.py, model.py combined | Full model forward pass works |
 | 7 | Training | train.py, 7 ablation configs, export .pt | skinfusenet.pt exported |
-| 8 | Backend | inference.py with real model, GradCAM backend | Real predictions from API |
+| 8 | Backend | inference.py with real v3 model, GradCAM backend | Real predictions from API |
 | 9 | Backend | Pydantic schemas, error handling, Dockerfile | All edge cases handled |
 | 10 | Frontend | ResultsPanel, ProbabilityChart, GradCAMViewer | All 6 components built |
 | 11 | Frontend | Wire axios to real API, loading/error states | Full end-to-end flow working |

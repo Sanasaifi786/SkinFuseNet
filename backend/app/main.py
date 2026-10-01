@@ -4,8 +4,8 @@ from app.routers import predict
 
 app = FastAPI(
     title="SkinFuseNet API",
-    version="0.2.0",
-    description="Multimodal skin lesion classification — Week 2 mock",
+    version="0.3.0",
+    description="Multimodal skin lesion classification using the private SkinFuseNet v3 checkpoint.",
 )
 
 app.add_middleware(

@@ -4,7 +4,7 @@ These define the exact shape of data in and out of the API.
 """
 
 from pydantic import BaseModel , Field , field_validator , model_validator
-from typing import Dict , Literal
+from typing import Dict , Literal , Optional
 
 VALID_LOCALIZATIONS = {
     "abdomen", "back", "chest", "ear", "face", "foot", "genital", "hand","lower extremity",
@@ -75,9 +75,8 @@ class PredictionResponse(BaseModel):
             "VASC": 0.003
         }]
     )
-    gradcam_image: str = Field(
-        ...,
-        min_length=10,
+    gradcam_image: Optional[str] = Field(
+        None,
         description="Base64-encoded PNG string of the GradCAM heatmap overlay.",
         examples=["iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="]
     )

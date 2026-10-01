@@ -4,8 +4,9 @@
 
 This document provides an up-to-date audit of the entire **SkinFuseNet** codebase, synchronizing tasks across the Master Architecture, `PERSON_A_FULLPLAN.md`, `PERSON_B_FULLPLAN.md`, `PERSON_C_FULLPLAN.md`, and all 13 weekly milestone roadmaps (`week1_README.md` through `week13_README.md`).
 
-**Current Assessment Date:** August 29, 2026 (Updated post Person A sprint)  
-**Overall Project Completion:** **~45%** (Person A's Week 3–6 sprint completed: SAM preprocessing, Dataset Loader, EfficientNetV2 CNN branch, and Training Loop are all implemented. CLAHE pipeline, BERT tokenizer, and all frontend/backend scaffolding also done. Remaining: ViT, BERT encoder, Fusion, Focal Loss, Model Assembly, Inference Service, GradCAM, and advanced UI components).
+**Current Assessment Date:** October 1, 2026
+**Current model target:** **SkinFuseNet v3**. The best checkpoint is stored outside GitHub to avoid repository size and privacy issues. The backend must run with that local artifact and must reject predictions when it is unavailable; mock predictions and synthetic heatmaps are removed.
+**Overall Project Completion:** **Needs revalidation after file moves.** This audit previously described an older scaffold and is no longer authoritative for every component.
 
 ---
 
@@ -27,7 +28,7 @@ This document provides an up-to-date audit of the entire **SkinFuseNet** codebas
 | **ML CNN Branch** | EfficientNetV2-S Feature Extractor | `ml/src/branches/cnn.py` | ✅ **Completed** (Person A / W5) — d=512 projection + GradCAM hooks |
 | **ML Training** | Training Loop (GPU, Mixed Precision) | `ml/src/train.py` | ✅ **Completed** (Person A / W6) — AdamW, CosineAnnealing, Mock model ready to swap |
 | **Backend API Scaffold** | `backend/app/main.py` (444 B) | FastAPI application with CORS middleware configured and router mounting. |
-| **Backend Routers** | `backend/app/routers/predict.py` (114 lines) | `/health` and `/predict` endpoints, input validation (10MB image limit, JPEG/PNG MIME checks, age [1-120], sex, and 13 valid HAM10000 anatomical localizations), and mock 7-class response. |
+| **Backend Routers** | `backend/app/routers/predict.py` | `/health` and `/predict` endpoints with input validation; `/predict` requires the private v3 checkpoint and never returns mock output. |
 | **Backend Schemas** | `backend/app/schemas/predict.py` (706 B) | Pydantic response models: `PredictionResponse` and `HealthResponse`. |
 | **Frontend UI (Input)** | `frontend/src/components/ImageUpload.jsx` | Drag-and-drop / file selector, MIME & size checks, image preview. |
 | **Frontend UI (Input)** | `frontend/src/components/MetadataForm.jsx` | Age input, sex selector, anatomical site dropdown matching HAM10000 classes. |
@@ -180,7 +181,14 @@ The following files exist in the repository structure but are currently 0-byte p
 
 ---
 
-## 4. Weekly Milestone Roadmap Summary
+## 4. Model and Runtime Policy
+
+- **Selected model:** SkinFuseNet v3 until a better validated model replaces it.
+- **Private artifacts:** Keep v3 weights in an ignored local model directory (`backend/models/` or `ml/models/`). Do not add them with `git add -f`.
+- **No fake inference:** Missing weights produce `503 Model unavailable`; fabricated probabilities and synthetic heatmaps are not acceptable.
+- **Current limitation:** Grad-CAM remains unavailable until a real Grad-CAM implementation is connected to the loaded v3 model, so the response may contain `gradcam_image: null`.
+
+## 5. Weekly Milestone Roadmap Summary
 
 | Week | Phase / Milestone | Status | Key Deliverables Remaining |
 |:---:|---|:---:|---|
@@ -264,7 +272,7 @@ flowchart TD
             C9["Person C\nModel loader\nLoad once on CPU/GPU\nmodel_loader.py - PENDING"]:::pending
             B6["Person B\nInference service\nLogits, class, confidence\ninference.py - PENDING"]:::pending
             B7["Person B\nGradCAM heatmap\nBase64 overlay fallback\ngradcam.py - PENDING"]:::pending
-            A6["Person A\nFastAPI router\n/predict + /health\nValidation + mock response - COMPLETED"]:::completed
+            A6["Person A\nFastAPI router\n/predict + /health\nValidation + real model response - COMPLETED"]:::completed
             C8["Person C\nPydantic schemas\nRequest/response validation\npredict.py - COMPLETED"]:::completed
 
             M1 --> C9

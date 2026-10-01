@@ -1,12 +1,9 @@
-"""
-predict.py — API router for /predict and /health endpoints.
-Week 2: returns mock data. Week 8: replaced with real model inference.
-"""
+"""API router for the real /predict and /health endpoints."""
 
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.schemas.predict import PredictionResponse, HealthResponse
-from app.services.inference import run_inference
+from app.services.inference import get_model, run_inference
 
 router = APIRouter()
 
@@ -26,8 +23,7 @@ VALID_SEX = {'male', 'female'}
 @router.get("/health", response_model=HealthResponse)
 def health_check():
     """Returns API health status."""
-    return HealthResponse(status="ok", model_loaded=False)
-    # model_loaded=False because real model not loaded yet
+    return HealthResponse(status="ok", model_loaded=get_model() is not None)
 
 
 @router.post("/predict", response_model=PredictionResponse)
@@ -80,8 +76,6 @@ async def predict(
             detail=f"Invalid localization '{localization}'. Must be one of: {sorted(VALID_LOCALIZATIONS)}"
         )
 
-    # ── Inference (Week 8) ──────────────────────────────────────────────────
-
-    # Pass validated data to inference service
+    # Run only against the private trained checkpoint; no development fallback exists.
     result = run_inference(contents, age, sex, localization)
     return result
