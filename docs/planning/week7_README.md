@@ -2,27 +2,27 @@
 ### Training + Ablation Study — 7 training configs — Evaluation — TorchScript export
 
 > **Phase:** ML - Training  
-> **Weeks done:** 1 ✅ · 2 ✅ · 3 ✅ · 4 ✅ · 5 ✅ · 6 ✅ · **7 ← you are here**  
+> **Weeks done:** 1 ✅ · 2 ✅ · 3 ✅ · 4 ✅ · 5 ✅ · 6 ✅ · 7 ✅
 > **Time needed:** 10-15 hrs across the week  
 > **Prerequisite:** Week 6 complete - full SkinFuseNet forward pass working, train.py running
 
 ---
 
-## 🔄 Current Status (Updated August 29, 2026)
+## 🔄 Current Status (Updated October 1, 2026)
 
 | Task | Owner | Status |
 |---|---|---|
-| `train.py` training loop ready | Person A | ✅ **Done** — mock model in place |
-| Real `SkinFuseNetModel` plugged into `train.py` | All | ❌ **Blocked** — needs `model.py` (Person C) |
-| 7 ablation training runs | Person A | ❌ **Not started** |
-| `team/ablation_results.md` | Person A | ❌ **Missing** |
-| `ml/src/evaluate.py` | Person B | ❌ **Empty** — not started |
-| `team/final_results.md` | Person B | ❌ **Missing** |
-| `ml/src/export.py` (TorchScript) | Person C | ❌ **Empty** — not started |
-| `team/model_export_guide.md` | Person C | ❌ **Missing** |
-| `team/week7_review.md` | Team | ❌ **Missing** |
+| `train.py` training loop ready | Person A | ✅ **Done** |
+| Real `SkinFuseNetModel` plugged into `train.py` | All | ✅ **Done** |
+| 7 ablation training runs | Person A | ✅ **Done** |
+| `team/ablation_results.md` | Person A | ✅ **Done** |
+| `ml/src/evaluate.py` | Person B | ✅ **Done** |
+| `team/final_results.md` | Person B | ✅ **Done** |
+| `ml/src/export.py` (TorchScript) | Person C | ✅ **Done** |
+| `team/model_export_guide.md` | Person C | ✅ **Done** |
+| `team/week7_review.md` | Team | ✅ **Done** |
 
-> **This entire week is blocked until Week 6 (model.py, fusion.py, loss.py) is complete.**
+> **Week 7 is complete.**
 
 ## Week 7 Goal
 

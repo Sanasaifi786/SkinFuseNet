@@ -49,6 +49,7 @@ import torch
 import numpy as np
 import argparse
 from pathlib import Path
+from PIL import Image, ImageOps
 from tqdm import tqdm
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 
@@ -222,9 +223,26 @@ def preprocess_one(
     # Applied regardless of whether SAM succeeded or fallback was used
     image_rgb = apply_clahe(image_rgb)
 
-    # ── Step 4: Resize to 256×256 ─────────────────────────────────────────────
-    image_rgb = cv2.resize(image_rgb, (OUTPUT_SIZE, OUTPUT_SIZE),
-                           interpolation=cv2.INTER_AREA)
+    # ── Step 4: Letterbox resize to 256×256 ───────────────────────────────────
+    # Preserves aspect ratio and pads with 'edge' instead of squishing
+    height, width = image_rgb.shape[:2]
+    scale = min(OUTPUT_SIZE / width, OUTPUT_SIZE / height)
+    new_width, new_height = max(1, round(width * scale)), max(1, round(height * scale))
+    
+    resized = cv2.resize(
+        image_rgb, 
+        (new_width, new_height), 
+        interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_LINEAR
+    )
+    
+    top = (OUTPUT_SIZE - new_height) // 2
+    left = (OUTPUT_SIZE - new_width) // 2
+    
+    image_rgb = np.pad(
+        resized, 
+        ((top, OUTPUT_SIZE - new_height - top), (left, OUTPUT_SIZE - new_width - left), (0, 0)), 
+        mode="edge"
+    )
 
     return image_rgb, used_fallback, reason
 
@@ -389,15 +407,16 @@ def main():
         log.write("-" * 60 + "\n\n")
 
         for img_path in tqdm(images_to_run, desc="SAM preprocessing", unit="img"):
-            # ── Load image ─────────────────────────────────────────────────────
-            bgr = cv2.imread(str(img_path))
-            if bgr is None:
-                log.write(f"[READ ERROR] {img_path.name}: Could not read file.\n")
+            # ── Load image (EXIF-aware) ────────────────────────────────────────
+            try:
+                with Image.open(str(img_path)) as source:
+                    # Fixes rotation issues caused by mobile camera metadata
+                    pil_rgb = ImageOps.exif_transpose(source).convert("RGB")
+                    rgb = np.array(pil_rgb)
+            except Exception as e:
+                log.write(f"[READ ERROR] {img_path.name}: {str(e)}\n")
                 read_errors += 1
                 continue
-
-            # OpenCV reads as BGR — convert to RGB for SAM and CLAHE
-            rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
 
             # ── Preprocess (SAM + CLAHE + resize) ─────────────────────────────
             processed_rgb, used_fallback, reason = preprocess_one(

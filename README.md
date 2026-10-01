@@ -239,24 +239,25 @@ skinfusenet/
 - [x] Week 2 — Frontend connected to mock backend — **Person A**
 - [x] Week 3 — Full SAM preprocessing pipeline over all 10,015 images — **Person A**
 - [x] Week 3 — CLAHE applied to all processed images — **Person B**
+- [x] Week 3 — Augmentation pipeline (MixUp, CutMix, RSPDA) — **Person C**
 - [x] Week 4 — BERT metadata tokenisation — **Person B**
+- [x] Week 4 — Stratified split verification — **Person C**
 - [x] Week 5 — EfficientNetV2 CNN branch — **Person A**
 - [x] Week 5 — Swin Transformer V2 ViT branch — **Person B**
+- [x] Week 5 — BERT encoder branch — **Person C**
 - [x] Week 6 — Training loop implementation — **Person A**
+- [x] Week 6 — Cross-attention fusion layer — **Person B**
+- [x] Week 6 — Focal loss + label smoothing — **Person C**
+- [x] Week 7 — Training run (100 epochs), ablation study (7 configs) — **Person A**
+- [x] Week 7 — Export `skinfusenet.pt` — **Person C**
+- [x] Week 8 — Real `inference.py` with loaded model — **Person B**
+- [x] Week 8 — Backend `preprocess.py` service — **Person C**
 
 ### 🚧 In Progress
-- [ ] Week 3 — Augmentation pipeline (MixUp, CutMix, RSPDA) — **Person C**
-- [x] Week 4 — Stratified split verification — **Person C**
-- [x] Week 5 — BERT encoder branch — **Person C**
-
-### 📅 Upcoming
-- [ ] Week 6 — Cross-attention fusion layer — **Person B**
-- [x] Week 6 — Focal loss + label smoothing — **Person C**
-- [ ] Week 7 — Training run (100 epochs), ablation study (7 configs) — **Person A**
-- [ ] Week 7 — Export `skinfusenet.pt` — **Person C**
-- [ ] Week 8 — Real `inference.py` with loaded model — **Person B**
 - [ ] Week 8 — GradCAM integrated into backend — **Person B**
 - [ ] Week 9 — Pydantic schemas, error handling, Dockerfile — **Person C**
+
+### 📅 Upcoming
 - [ ] Week 10 — `ResultsPanel.jsx`, `ProbabilityChart.jsx` — **Persons B and C**
 - [ ] Week 10 — `GradCAMViewer.jsx` — **Person C**
 - [ ] Week 11 — Full frontend connected to real backend — **Persons A and B**

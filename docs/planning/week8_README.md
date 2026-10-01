@@ -13,12 +13,12 @@
 | Task | Owner | Status |
 |---|---|---|
 | `/predict` router (mock response) | Person A | ✅ **Done** — validation, schemas, mock response |
-| `backend/app/services/inference.py` (real model) | Person B | ❌ **Empty** — not started |
-| `backend/app/services/preprocess.py` (image to tensor) | Person C | ❌ **Empty** — not started |
-| `backend/app/core/model_loader.py` (singleton loader) | Person C | ❌ **Empty** — not started |
+| `backend/app/services/inference.py` (real model) | Person B | 🚧 **In Progress** — waiting on GradCAM |
+| `backend/app/services/preprocess.py` (image to tensor) | Person C | ✅ **Done** |
+| `backend/app/core/model_loader.py` (singleton loader) | Person C | ✅ **Done** |
 | `backend/app/services/image_utils.py` | Team | ❌ **Empty** — not started |
-| Router wired to real `run_inference()` | Person A | ❌ **Blocked** — needs inference.py first |
-| Tested with 5 real HAM10000 images | Person A | ❌ **Blocked** |
+| Router wired to real `run_inference()` | Person A | ✅ **Done** |
+| Tested with 5 real HAM10000 images | Person A | ❌ **Not started** |
 | `team/week8_review.md` | Team | ❌ **Missing** |
 
 > **Note:** The mock router and validation are complete. This week's goal is replacing the mock response with real inference.
@@ -116,25 +116,30 @@ Do not skip the order. If A tries to wire the router before B has inference.py, 
 ## Week 8 Checklist
 
 ### Person C
-- [ ] Function: preprocess_image(image_bytes: bytes) → FloatTensor [1,3,256,256]
-- [ ] Step 1: decode bytes → PIL Image: Image.open(io.BytesIO(image_bytes)).convert('R...
-- [ ] Step 2: convert to numpy RGB array: np.array(pil_image)
-- [ ] Step 3: apply CLAHE — same code as ml/src/preprocess/clahe.py (copy the function...
-- [ ] Step 4: convert back to PIL Image: Image.fromarray(enhanced)
+- [x] Function: preprocess_image(image_bytes: bytes) → FloatTensor [1,3,256,256]
+- [x] Step 1: decode bytes → PIL Image: Image.open(io.BytesIO(image_bytes)).convert('R...
+- [x] Step 2: convert to numpy RGB array: np.array(pil_image)
+- [x] Step 3: apply CLAHE — same code as ml/src/preprocess/clahe.py (copy the function...
+- [x] Step 4: convert back to PIL Image: Image.fromarray(enhanced)
 
 ### Person B
-- [ ] Function: run_inference(image_bytes, age, sex, localization) → dict
-- [ ] Load model from model_loader (Person A's singleton). Get device.
-- [ ] Call preprocess_image(image_bytes) from Person C. Move tensor to device.
-- [ ] Tokenise metadata: same BertTokenizer call as training (padding=max_length, max_...
-- [ ] Forward pass: model.eval(), torch.no_grad(), logits = model(image_tensor, input_...
+- [x] Function: run_inference(image_bytes, age, sex, localization) → dict
+- [x] Load model from model_loader (Person A's singleton). Get device.
+- [x] Call preprocess_image(image_bytes) from Person C. Move tensor to device.
+- [x] Tokenise metadata: same BertTokenizer call as training (padding=max_length, max_...
+- [x] Forward pass: model.eval(), torch.no_grad(), logits = model(image_tensor, input_...
+- [x] Probabilities: torch.softmax(logits, dim=1)[0]
+- [x] Predicted class: CLASS_NAMES[probabilities.argmax().item()]
+- [ ] Run GradCAM targeting model.cnn.features[-1] — THIS LAYER IS CRITICAL. Wrong layer = blank heatmap.
+- [ ] Encode heatmap as base64 PNG string
+- [x] Return dict with: predicted_class, confidence, probabilities (dict of all 7), gradcam_image
 
 ### Person A
-- [ ] Open predict.py. Find the mock response and delete it.
-- [ ] Import: from backend.app.services.inference import run_inference
-- [ ] In the predict endpoint, after validation: result = run_inference(contents, age,...
-- [ ] Wrap in try-except: if inference throws any exception, raise HTTPException(statu...
-- [ ] Return result directly (it already matches PredictionResponse schema)
+- [x] Open predict.py. Find the mock response and delete it.
+- [x] Import: from backend.app.services.inference import run_inference
+- [x] In the predict endpoint, after validation: result = run_inference(contents, age,...
+- [x] Wrap in try-except: if inference throws any exception, raise HTTPException(statu...
+- [x] Return result directly (it already matches PredictionResponse schema)
 
 ### Team
 - [ ] All files committed and pushed to GitHub
