@@ -105,6 +105,11 @@ function App() {
                 )}
                 {result && (
                   <div className="space-y-4">
+                    {result.is_mock && (
+                      <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        <strong>Demo / Mock Prediction:</strong> This result uses simulated data because no trained model is configured. It must not be used for clinical decisions.
+                      </div>
+                    )}
                     <ResultsPanel result={result} originalImage={imageFile ? URL.createObjectURL(imageFile) : null} />
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button onClick={reset} className="w-full py-2.5 text-sm font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200">

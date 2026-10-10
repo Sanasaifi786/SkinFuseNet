@@ -2,7 +2,7 @@
 ml/data/raw/HAM10000_images_part_1/
 ml/data/raw/HAM10000_images_part_2/
 ml/data/processed/
-
+data/
 *.pth
 *.pt
 *.h5

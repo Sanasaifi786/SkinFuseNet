@@ -2,6 +2,32 @@ import { useState } from "react"
 import axios from "axios"
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+const USE_MOCK_PREDICTIONS = import.meta.env.VITE_USE_MOCK_PREDICTIONS !== "false"
+const MOCK_CLASSES = ["AKIEC", "BCC", "BKL", "DF", "MEL", "NV", "VASC"]
+
+function createMockPrediction(age, sex, localization) {
+  const seed = `${age}-${sex}-${localization}`.split("").reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0
+  )
+  const predictedClass = MOCK_CLASSES[seed % MOCK_CLASSES.length]
+  const confidence = 0.86 + (seed % 10) / 100
+  const remainingProbability = (1 - confidence) / (MOCK_CLASSES.length - 1)
+  const probabilities = Object.fromEntries(
+    MOCK_CLASSES.map((classCode) => [
+      classCode,
+      Number((classCode === predictedClass ? confidence : remainingProbability).toFixed(4))
+    ])
+  )
+
+  return {
+    predicted_class: predictedClass,
+    confidence: Number(confidence.toFixed(4)),
+    probabilities,
+    gradcam_image: null,
+    is_mock: true
+  }
+}
 
 // Helper to resize image on the client side using Canvas API
 function resizeImageFile(file, maxWidth, maxHeight) {
@@ -55,6 +81,12 @@ export function usePrediction() {
     setResult(null)
 
     try {
+      if (USE_MOCK_PREDICTIONS) {
+        await new Promise((resolve) => setTimeout(resolve, 700))
+        setResult(createMockPrediction(age, sex, localization))
+        return
+      }
+
       // 1. Resize image client-side to drastically reduce upload payload
       const resizedFile = await resizeImageFile(imageFile, 256, 256)
 

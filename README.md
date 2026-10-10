@@ -355,6 +355,10 @@ npm install
 # Create environment file
 echo "VITE_API_URL=http://localhost:8000" > .env
 
+# The frontend uses deterministic mock predictions by default until a trained
+# checkpoint is available. Set this to false to call the backend instead:
+# echo "VITE_USE_MOCK_PREDICTIONS=false" >> .env
+
 # Run development server
 npm run dev
 
