@@ -25,6 +25,14 @@ interface DermoscopyVisualizerProps {
 
 export type ViewLayer = 'raw' | 'clahe' | 'sam' | 'vit_attention';
 
+const PERFORMANCE_COMPARISON = [
+  { metric: 'Accuracy (%)', proposed: '97.1', baseline1: '96.4', baseline2: '94.1' },
+  { metric: 'Precision (%)', proposed: 'Not reported', baseline1: '95.0', baseline2: '93.0' },
+  { metric: 'Recall (%)', proposed: 'Not reported', baseline1: '95.0', baseline2: '92.0' },
+  { metric: 'F1-score (%)', proposed: '96.0', baseline1: '95.0', baseline2: '92.0' },
+  { metric: 'Time (ms)', proposed: 'Not reported', baseline1: 'Not reported', baseline2: 'Not reported' }
+] as const;
+
 export const DermoscopyVisualizer: React.FC<DermoscopyVisualizerProps> = ({
   imageSrc,
   samPolygon,
@@ -343,6 +351,45 @@ export const DermoscopyVisualizer: React.FC<DermoscopyVisualizerProps> = ({
             Standard 224×224 RGB Dermoscopy image from the HAM10000 Kaggle dataset.
           </div>
         )}
+      </div>
+
+      <div className="p-4 border-t border-slate-200 bg-white">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h4 className="text-sm font-bold text-slate-900">Benchmark Performance</h4>
+            <p className="text-[11px] text-slate-500">
+              HAM10000 test-set comparison from the project evaluation results
+            </p>
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            Higher is better
+          </span>
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <table className="w-full min-w-[560px] text-xs">
+            <thead className="bg-rose-800 text-white">
+              <tr>
+                <th scope="col" className="px-3 py-2 text-left font-bold">Metric</th>
+                <th scope="col" className="px-3 py-2 text-center font-bold">Proposed</th>
+                <th scope="col" className="px-3 py-2 text-center font-bold">Baseline 1</th>
+                <th scope="col" className="px-3 py-2 text-center font-bold">Baseline 2</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {PERFORMANCE_COMPARISON.map((row) => (
+                <tr key={row.metric} className="hover:bg-slate-50">
+                  <th scope="row" className="px-3 py-2 text-left font-medium text-slate-700">
+                    {row.metric}
+                  </th>
+                  <td className="px-3 py-2 text-center font-semibold text-blue-700">{row.proposed}</td>
+                  <td className="px-3 py-2 text-center text-slate-600">{row.baseline1}</td>
+                  <td className="px-3 py-2 text-center text-slate-600">{row.baseline2}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
